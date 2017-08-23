@@ -12,4 +12,4 @@ ADD gl-k8s-integrator /app/
 
 WORKDIR /app
 
-ENTRYPOINT ["./gl-k8s-integrator"]
+ENTRYPOINT <["./gl-k8s-integrator"]
