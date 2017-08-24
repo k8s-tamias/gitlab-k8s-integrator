@@ -12,8 +12,8 @@ with Kubernetes to make
 | ------------- |:-------------:|:-------:| 
 | Personal Repositories| Namespace of the same name | student-Bob -> student-bob
 | Groups        | Namespace of the same name | Foo-Group -> foo-group
-| Sub-Groups | Namespaces of the same name, prefixed with "<GroupName>-". "-" will be replaced with "--" to maintain uniqueness | Foo-Group/bar-subgroup -> foo--group-bar--subgroup    
-| Projects | Namespace of the same name, prefixed with "<GroupName>-" and "<SubGroupName>-" if applicable | Foo-Group/bar-subgroup/MyProject -> foo--group-bar--subgroup-myproject 
+| Sub-Groups | Namespaces of the same name, prefixed with "$GroupName$-". "-" will be replaced with "--" to maintain uniqueness | Foo-Group/bar-subgroup -> foo--group-bar--subgroup    
+| Projects | Namespace of the same name, prefixed with "$GroupName$-" and "$SubGroupName$-" if applicable | Foo-Group/bar-subgroup/MyProject -> foo--group-bar--subgroup-myproject 
 
 #### Additional Rules:
 - All Gitlab Names will be lower cased in K8s 
