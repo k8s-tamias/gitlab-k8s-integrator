@@ -3,6 +3,9 @@ package webhooklistener
 import (
 	"net/http"
 	"log"
+	"io/ioutil"
+	"encoding/json"
+	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabk8s"
 )
 
 func Listen(quit chan int) {
@@ -23,13 +26,30 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Gitlab-Event") != "System Hook" {
 			return
 		}
-
-
-
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			HandleError(err, w, "Could not read body!", http.StatusBadRequest)
+		}
+		go gitlabk8s.HandleGitlabEvent(body)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func handleHealthz(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
+}
+
+type ErrorMessage struct {
+	Msg string
+}
+
+func HandleError(err error, w http.ResponseWriter, msg string, statusCode int) {
+	log.Println("Error occurred! Err was: " + err.Error())
+	w.WriteHeader(statusCode)
+	if msg != "" {
+		answer, _ := json.Marshal(ErrorMessage{msg + err.Error()})
+		w.Write(answer)
+	}
+	return
 }

@@ -5,6 +5,9 @@ import (
 	"k8s.io/client-go/rest"
 	"log"
 	"time"
+	"encoding/json"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type GitlabEvent struct {
@@ -30,6 +33,25 @@ type GitlabEvent struct {
 	GroupPath				string		`json:"group_path"`
 }
 
+
+func HandleGitlabEvent(body []byte){
+
+	var event GitlabEvent
+	err := json.Unmarshal(body, &event)
+	if check(err) {
+		return
+	}
+	k8sclient := getK8sClient()
+
+	switch event.EventName {
+	case "project_create":
+		k8sclient.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: event.Path}})
+
+	case "project_destroy":
+
+	}
+
+}
 
 func getK8sClient() *kubernetes.Clientset {
 	// creates the in-cluster config
