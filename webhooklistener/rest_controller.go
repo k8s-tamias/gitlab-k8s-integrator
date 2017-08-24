@@ -19,7 +19,11 @@ func Listen(quit chan int) {
 func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 
-	case "GET":
+	case "POST":
+		if r.Header.Get("X-Gitlab-Event") != "System Hook" {
+			return
+		}
+
 
 
 	}
