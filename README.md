@@ -21,6 +21,8 @@ with Kubernetes to make
 - If a namespace-name is already taken due to group and sub-group concatenation (e.g. foo-group/bar-project vs. foo-group-bar-project as single group name) 
 a counter will be added to at the end of the namespace name with a "-" as prefix. I.e.: Gitlab Group "foo_bar" becomes K8s namespace
 "foo-bar". A new Gitlab group by the name of "foo.bar" would now become "foo-bar-1".
+- To avoid wrong deletion, a label with `gitlab-origin` is added to each namespace which is used to discover the correct
+namespace when attempting to delete a namespace.
 
 ### Roles and Permissions
 
@@ -47,7 +49,14 @@ However you may change each Role name by setting the following ENV variables as 
 |PROJECT_REPORTER_ROLENAME|gitlab-project-reporter
 |PROJECT_DEFAULT_ROLENAME|gitlab-project-guest
 
-#### Reporter Role<a name="reporterrole"></a>
+#### RoleBinding Naming
+
+The RoleBindings are created inside the affected namespace and are given a name which is created after the following scheme:
+`username + rolename + namespace`
+
+So User "foo" with Role "Master" in Group "bar" would become `foo-gitlab-group-master-bar`
+
+#### Recommended Reporter Role<a name="reporterrole"></a>
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -67,7 +76,7 @@ rules:
    - watch
 ```
 
-#### Master Role<a name="masterrole"></a>
+#### Recommended Master Role<a name="masterrole"></a>
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole

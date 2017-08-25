@@ -111,20 +111,33 @@ func createNamespace(name string) {
 	check(err)
 }
 
-func deleteNamespace(name string) {
+func deleteNamespace(path string) {
 	k8sclient := getK8sClient()
-	namespaces, err := k8sclient.CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: "gitlab-origin=" + name})
+	correctNs := getActualNameSpaceName(path)
+	if correctNs != "" {
+		err := k8sclient.Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
+		check(err)
+	}
+}
+
+// getActualNameSpaceName looks for the original name from gitlab in the gitlab-origin labels of namespaces
+// and returns the given namespace in the K8s cluster
+func getActualNameSpaceName(gitlabOriginName string) string {
+	correctName := ""
+
+	k8sclient := getK8sClient()
+	namespaces, err := k8sclient.CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: "gitlab-origin=" + gitlabOriginName})
 	if check(err) {
 		log.Fatal("Error while retrieving namespaces: " + err.Error())
 	}
 	if len(namespaces.Items) > 1 {
-		log.Println("WARNING: Found mutliple namespaces with gitlab-origin= " + name + ". This is potentially very bad, consult a cloud admin!")
+		log.Println("WARNING: Found mutliple namespaces with gitlab-origin= " + gitlabOriginName + ". This is potentially very bad, consult a cloud admin!")
 	} else if len(namespaces.Items) < 1 {
-		log.Println("INFO: No namespace has been found with gitlab-origin= " + name + ". Check if namespace still exsists in K8s Cluster!")
+		log.Println("INFO: No namespace has been found with gitlab-origin= " + gitlabOriginName + ". Check if namespace still exsists in K8s Cluster!")
 	} else {
-		err = k8sclient.Namespaces().Delete(namespaces.Items[0].Name, &metav1.DeleteOptions{})
-		check(err)
+		correctName = namespaces.Items[0].Name
 	}
+	return correctName
 }
 
 func createProjectRoleBinding(username, path, accessLevel string) {
@@ -134,7 +147,9 @@ func createProjectRoleBinding(username, path, accessLevel string) {
 		log.Fatal(err)
 	}
 
-	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, getProjectRoleName(accessLevel)), Namespace: ns},
+	rolename := getProjectRoleName(accessLevel)
+
+	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, rolename, getActualNameSpaceName(path)), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
 		RoleRef:  v1beta1.RoleRef{Kind: "Role", Name: getProjectRoleName(accessLevel)}}
 
@@ -150,7 +165,7 @@ func deleteProjectRoleBinding(username, path, accessLevel string) {
 	rolename := getProjectRoleName(accessLevel)
 
 	if rolename != "" {
-		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(getRoleBindingName(username, rolename), &metav1.DeleteOptions{})
+		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(getRoleBindingName(username, rolename, getActualNameSpaceName(path)), &metav1.DeleteOptions{})
 	}
 }
 
@@ -161,7 +176,9 @@ func createGroupRoleBinding(username, path, accessLevel string) {
 		log.Fatal(err)
 	}
 
-	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, getGroupRoleName(accessLevel)), Namespace: ns},
+	rolename := getGroupRoleName(accessLevel)
+
+	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, rolename, getActualNameSpaceName(path)), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
 		RoleRef:  v1beta1.RoleRef{Kind: "Role", Name: getGroupRoleName(accessLevel)}}
 
@@ -177,12 +194,12 @@ func deleteGroupRoleBinding(username, path, accessLevel string) {
 	rolename := getGroupRoleName(accessLevel)
 
 	if rolename != "" {
-		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(getRoleBindingName(username, rolename), &metav1.DeleteOptions{})
+		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(getRoleBindingName(username, rolename, getActualNameSpaceName(path)), &metav1.DeleteOptions{})
 	}
 }
 
-func getRoleBindingName(username, rolename string) string {
-	return username + "-" + rolename
+func getRoleBindingName(username, rolename, ns string) string {
+	return username + "-" + rolename + "-" + ns
 }
 
 func getK8sCompatibleNamespaceName(givenName string) (string, error) {
@@ -194,7 +211,8 @@ func getK8sCompatibleNamespaceName(givenName string) (string, error) {
 		"ä", "ae",
 		"ß", "ss",
 		"_", "-",
-		".", "-")
+		".", "-",
+		"/", "-")
 
 	nsName = replacer.Replace(nsName)
 	// regex for checking k8s namespace name
@@ -283,9 +301,9 @@ func getGroupRoleName(accessLevel string) string {
 		}
 
 	default:
-		rname := os.Getenv("PROJECT_DEFAULT_ROLENAME")
+		rname := os.Getenv("GROUP_DEFAULT_ROLENAME")
 		if rname == "" {
-			rname = "gitlab-project-guest"
+			rname = "gitlab-group-guest"
 		}
 	}
 	return rname
