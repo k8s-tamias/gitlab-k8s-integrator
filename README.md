@@ -17,17 +17,55 @@ with Kubernetes to make
 
 #### Additional Rules:
 - All Gitlab Names will be lower cased in K8s 
+- "_" and "." in Gitlab Names will be swapped for "-" in K8s Namespaces
 - If a namespace-name is already taken due to group and sub-group concatenation (e.g. foo-group/bar-project vs. foo-group-bar-project as single group name) 
-a counter will be added to at the end of the namespace name with a "-" as prefix.
+a counter will be added to at the end of the namespace name with a "-" as prefix. I.e.: Gitlab Group "foo_bar" becomes K8s namespace
+"foo-bar". A new Gitlab group by the name of "foo.bar" would now become "foo-bar-1".
 
-### Roles will be created according to the following schema
+### Roles and Permissions
+
+We came up with a default for Roles and Persmissions as follows:
 
 | Gitlab        | K8s           | 
 | ------------- |:-------------:|
 |Guest | nothing 
-|Reporter | Get, List, Watch for Pods & Pods/Logs
+|Reporter | see [Report Role](#reporterrole)
 |Developer | same as Reporter
 |Master | see [Master Role](#masterrole)
+
+The names of the ClusterRoles which get bound are defaulting to this scheme: `gitlab-<group|project>-<master|developer|reporter|guest>`
+However you may change each Role name by setting the following ENV variables as you see fit:
+
+| ENV        | Default           | 
+|:-------------:|:-------------:|
+|GROUP_MASTER_ROLENAME | gitlab-group-master
+|GROUP_DEVELOPER_ROLENAME| gitlab-group-developer
+|GROUP_REPORTER_ROLENAME| gitlab-group-reporter
+|GROUP_DEFAULT_ROLENAME| gitlab-group-guest
+|PROJECT_MASTER_ROLENAME|gitlab-project-master
+|PROJECT_DEVELOPER_ROLENAME|gitlab-project-developer
+|PROJECT_REPORTER_ROLENAME|gitlab-project-reporter
+|PROJECT_DEFAULT_ROLENAME|gitlab-project-guest
+
+#### Reporter Role<a name="reporterrole"></a>
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: gitlab-group-reporter
+rules:
+- apiGroups:
+   - ""
+  resources:
+   - events
+   - persistentvolumes
+   - pods/status
+   - pods/log
+  verbs:
+   - get
+   - list
+   - watch
+```
 
 #### Master Role<a name="masterrole"></a>
 ```yaml
