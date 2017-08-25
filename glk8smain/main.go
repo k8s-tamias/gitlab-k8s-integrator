@@ -2,10 +2,10 @@ package glk8smain
 
 import (
 	"fmt"
+	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/webhooklistener"
 	"log"
 	"os"
 	"os/signal"
-	"gitlab.informatik.haw-hamburg.de/mars/sim-runner-svc/rest"
 	"syscall"
 )
 
@@ -31,7 +31,7 @@ func Main() {
 	}()
 
 	// listen in sep. routine
-	go rest_service.Listen(quit)
+	go webhooklistener.Listen(quit)
 	log.Println("Gitlab K8s Integrator listening!")
 	// Wait until server signals quit
 	select {
