@@ -3,8 +3,7 @@
 This service consumes Gitlab Webhook Calls and translates them into namespaces and roles in Kubernetes. 
 Users in Gitlab are then bound to the roles according to their membership in Gitlab. A change has immediate effect to K8s
 due to the use of Gitlab Webhooks. Additionally the Integrator has a recurring job which synchronizes the state of Gitlab
-with Kubernetes to ensure that the two systems drift appart due to lost events. In case of a conflict, Gitlab will act as
-the authorative system.
+with Kubernetes to ensure that the two systems do not drift appart due to lost events. In case of a conflict, Gitlab will act as the authorative system.
 
 ### Namespaces will be created according to the following scheme:
 
