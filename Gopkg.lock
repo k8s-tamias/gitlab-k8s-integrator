@@ -133,12 +133,6 @@
 
 [[projects]]
   branch = "master"
-  name = "k8s.io/api"
-  packages = ["core/v1"]
-  revision = "c0bcfdc3597be1a899c9f0b4e3d1b2e023b5148f"
-
-[[projects]]
-  branch = "master"
   name = "k8s.io/apimachinery"
   packages = ["pkg/api/equality","pkg/api/errors","pkg/api/meta","pkg/api/resource","pkg/apimachinery","pkg/apimachinery/announced","pkg/apimachinery/registered","pkg/apis/meta/v1","pkg/apis/meta/v1/unstructured","pkg/apis/meta/v1alpha1","pkg/conversion","pkg/conversion/queryparams","pkg/conversion/unstructured","pkg/fields","pkg/labels","pkg/openapi","pkg/runtime","pkg/runtime/schema","pkg/runtime/serializer","pkg/runtime/serializer/json","pkg/runtime/serializer/protobuf","pkg/runtime/serializer/recognizer","pkg/runtime/serializer/streaming","pkg/runtime/serializer/versioning","pkg/selection","pkg/types","pkg/util/clock","pkg/util/diff","pkg/util/errors","pkg/util/framer","pkg/util/intstr","pkg/util/json","pkg/util/net","pkg/util/rand","pkg/util/runtime","pkg/util/sets","pkg/util/validation","pkg/util/validation/field","pkg/util/wait","pkg/util/yaml","pkg/version","pkg/watch","third_party/forked/golang/reflect"]
   revision = "dc1f89aff9a7509782bde3b68824c8043a3e58cc"
@@ -152,6 +146,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "47df8584ae2be6470f01aa22d6aeedade95343aaace0dfb120e0064103163ace"
+  inputs-digest = "93bd911f2b1565b611a79dbec1d1d03ab7141b21ac02da5801b5c0ade64bd6b5"
   solver-name = "gps-cdcl"
   solver-version = 1

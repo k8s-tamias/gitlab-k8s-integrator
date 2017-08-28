@@ -151,7 +151,7 @@ func createProjectRoleBinding(username, path, accessLevel string) {
 
 	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, rolename, getActualNameSpaceName(path)), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
-		RoleRef:  v1beta1.RoleRef{Kind: "Role", Name: getProjectRoleName(accessLevel)}}
+		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: getProjectRoleName(accessLevel)}}
 
 	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 }
@@ -180,7 +180,7 @@ func createGroupRoleBinding(username, path, accessLevel string) {
 
 	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: getRoleBindingName(username, rolename, getActualNameSpaceName(path)), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
-		RoleRef:  v1beta1.RoleRef{Kind: "Role", Name: getGroupRoleName(accessLevel)}}
+		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: getGroupRoleName(accessLevel)}}
 
 	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 }
