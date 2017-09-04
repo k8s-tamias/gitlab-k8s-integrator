@@ -1,4 +1,4 @@
-package gitlabk8s
+package usecases
 
 import "testing"
 

@@ -1,7 +1,6 @@
-package gitlabk8s
+package k8sclient
 
 import (
-	"encoding/json"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,86 +13,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
-type GitlabEvent struct {
-	CreatedAt            time.Time `json:"created_at"`
-	UpdatedAt            time.Time `json:"updated_at"`
-	EventName            string    `json:"event_name"`
-	Name                 string    `json:"name"`
-	OwnerEmail           string    `json:"owner_email"`
-	OwnerName            string    `json:"owner_name"`
-	Path                 string    `json:"path"`
-	PathWithNameSpace    string    `json:"path_with_namespace"`
-	ProjectId            int       `json:"project_id"`
-	ProjectVisibility    string    `json:"project_visibility"`
-	OldPathWithNamespace string    `json:"old_path_with_namespace"`
-	ProjectAccess        string    `json:"project_access"`
-	GroupAccess          string    `json:"group_access"`
-	UserEmail            string    `json:"user_email"`
-	UserName             string    `json:"user_name"`
-	UserUsername         string    `json:"user_username"`
-	UserId               int       `json:"user_id"`
-	GroupId              int       `json:"group_id"`
-	GroupName            string    `json:"group_name"`
-	GroupPath            string    `json:"group_path"`
-}
-
-func HandleGitlabEvent(body []byte) {
-
-	var event GitlabEvent
-	err := json.Unmarshal(body, &event)
-	if check(err) {
-		return
-	}
-
-	switch event.EventName {
-
-	// project operations
-
-	case "project_create":
-		createNamespace(event.PathWithNameSpace)
-
-	case "project_destroy":
-		deleteNamespace(event.PathWithNameSpace)
-
-	case "project_rename":
-		deleteNamespace(event.OldPathWithNamespace)
-		createNamespace(event.PathWithNameSpace)
-
-	case "project_transferred":
-		deleteNamespace(event.OldPathWithNamespace)
-		createNamespace(event.PathWithNameSpace)
-
-	// project member operations
-
-	case "user_add_to_team":
-		createProjectRoleBinding(event.UserUsername, event.PathWithNameSpace, event.ProjectAccess)
-
-	case "user_remove_from_team":
-		deleteProjectRoleBinding(event.UserUsername, event.PathWithNameSpace, event.ProjectAccess)
-
-	// group operations
-
-	case "group_create":
-		createNamespace(event.Path)
-
-	case "group_destroy":
-		deleteNamespace(event.PathWithNameSpace)
-
-	// group member operations
-
-	case "user_add_to_group":
-		createGroupRoleBinding(event.UserUsername, event.PathWithNameSpace, event.GroupAccess)
-
-	case "user_remove_from_group":
-		deleteGroupRoleBinding(event.UserUsername, event.PathWithNameSpace, event.GroupAccess)
-
-	}
-}
-
-func createNamespace(name string) {
+func CreateNamespace(name string) {
 	nsName, err := getK8sCompatibleNamespaceName(name)
 	if check(err) {
 		log.Fatal(err)
@@ -111,7 +33,7 @@ func createNamespace(name string) {
 	check(err)
 }
 
-func deleteNamespace(path string) {
+func DeleteNamespace(path string) {
 	k8sclient := getK8sClient()
 	correctNs := getActualNameSpaceName(path)
 	if correctNs != "" {
@@ -121,7 +43,7 @@ func deleteNamespace(path string) {
 }
 
 // getActualNameSpaceName looks for the original name from gitlab in the gitlab-origin labels of namespaces
-// and returns the given namespace in the K8s cluster
+// and returns the given namespace name in the K8s cluster
 func getActualNameSpaceName(gitlabOriginName string) string {
 	correctName := ""
 
@@ -140,7 +62,7 @@ func getActualNameSpaceName(gitlabOriginName string) string {
 	return correctName
 }
 
-func createProjectRoleBinding(username, path, accessLevel string) {
+func CreateProjectRoleBinding(username, path, accessLevel string) {
 	ns, err := getK8sCompatibleNamespaceName(path)
 
 	if check(err) {
@@ -156,7 +78,7 @@ func createProjectRoleBinding(username, path, accessLevel string) {
 	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 }
 
-func deleteProjectRoleBinding(username, path, accessLevel string) {
+func DeleteProjectRoleBinding(username, path, accessLevel string) {
 	ns, err := getK8sCompatibleNamespaceName(path)
 	if check(err) {
 		log.Fatal(err)
@@ -169,7 +91,7 @@ func deleteProjectRoleBinding(username, path, accessLevel string) {
 	}
 }
 
-func createGroupRoleBinding(username, path, accessLevel string) {
+func CreateGroupRoleBinding(username, path, accessLevel string) {
 	ns, err := getK8sCompatibleNamespaceName(path)
 
 	if check(err) {
@@ -185,7 +107,7 @@ func createGroupRoleBinding(username, path, accessLevel string) {
 	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 }
 
-func deleteGroupRoleBinding(username, path, accessLevel string) {
+func DeleteGroupRoleBinding(username, path, accessLevel string) {
 	ns, err := getK8sCompatibleNamespaceName(path)
 	if check(err) {
 		log.Fatal(err)
@@ -227,30 +149,6 @@ func getK8sCompatibleNamespaceName(givenName string) (string, error) {
 	}
 
 	return nsName, nil
-}
-
-func getK8sClient() *kubernetes.Clientset {
-	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
-	if check(err) {
-		log.Fatal(err)
-	}
-
-	// creates the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-
-	if check(err) {
-		log.Fatal(err)
-	}
-	return clientset
-}
-
-func check(err error) bool {
-	if err != nil {
-		log.Println("Error : ", err.Error())
-		return true
-	}
-	return false
 }
 
 func getProjectRoleName(accessLevel string) string {
@@ -307,4 +205,28 @@ func getGroupRoleName(accessLevel string) string {
 		}
 	}
 	return rname
+}
+
+func getK8sClient() *kubernetes.Clientset {
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if check(err) {
+		log.Fatal(err)
+	}
+
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+
+	if check(err) {
+		log.Fatal(err)
+	}
+	return clientset
+}
+
+func check(err error) bool {
+	if err != nil {
+		log.Println("Error : ", err.Error())
+		return true
+	}
+	return false
 }

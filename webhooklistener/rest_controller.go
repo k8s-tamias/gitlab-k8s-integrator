@@ -1,20 +1,27 @@
 package webhooklistener
 
 import (
-	"net/http"
-	"log"
-	"io/ioutil"
 	"encoding/json"
-	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabk8s"
+	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/usecases"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 func Listen(quit chan int) {
 	router := http.NewServeMux()
 	router.HandleFunc("/healthz", handleHealthz)
 	router.HandleFunc("/", handleGitlabWebhook)
+	router.HandleFunc("sync", handleSync)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	quit <- 0
+}
+func handleSync(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+
+	}
 }
 
 // handleGitlabWebhook listens for the following events from the
@@ -30,12 +37,12 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			HandleError(err, w, "Could not read body!", http.StatusBadRequest)
 		}
-		go gitlabk8s.HandleGitlabEvent(body)
+		go usecases.HandleGitlabEvent(body)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func handleHealthz(w http.ResponseWriter, r *http.Request){
+func handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }

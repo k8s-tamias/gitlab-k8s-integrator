@@ -15,22 +15,17 @@ before_script:
   - git config --global http.sslVerify true
   - mkdir -p $GOPATH/src/gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME/
   - mv ./* $GOPATH/src/gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME/
-  - mkdir /tools
-  - cd /tools
-  - wget https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz
-  - tar -zxvf glide-v0.12.3-linux-amd64.tar.gz
-  - mv linux-amd64/ glide/
-  - PATH=/tools/glide:$PATH/
   - cd $GOPATH/src/gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME/
+  - go get -u github.com/golang/dep/cmd/dep
 
 buildAndTest:
   stage: test
-  image: nexus.informatik.haw-hamburg.de/golang:1.8.3
+  image: nexus.informatik.haw-hamburg.de/golang:1.9
   variables:
     CGO_ENABLED: "0"
     GOOS: "linux"
   script:
-    - glide install
+    - dep ensure -v
     - go test gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME/$(glide novendor)
     - go build -a -installsuffix cgo gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME
     - mv ./$SERVICE_NAME /$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/$SERVICE_NAME
