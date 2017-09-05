@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabclient"
+	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
 	"log"
 	"time"
 )
@@ -38,6 +39,43 @@ func PerformGlK8sSync() {
 	if check(err) {
 		return
 	}
+
+	// 1. delete all Namespaces which are not in the gitlab set
+	namespaces := k8sclient.GetAllNamespacesByOriginLabel()
+
+	for _, namespace := range namespaces {
+		delete := true
+
+		for _, user := range gitlabContent.Users {
+			if namespace == user.Username {
+				delete = false
+				break
+			}
+		}
+
+		if delete == true {
+			for _, project := range gitlabContent.Projects {
+				if namespace == project.PathWithNameSpace {
+					delete = false
+					break
+				}
+			}
+		}
+
+		if delete == true {
+			for _, group := range gitlabContent.Groups {
+				if namespace == group.FullPath {
+					delete = false
+					break
+				}
+			}
+		}
+
+		if delete {
+			k8sclient.DeleteNamespace(namespace)
+		}
+	}
+
 }
 
 func StartRecurringSyncTimer() {

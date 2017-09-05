@@ -24,6 +24,15 @@ a counter will be added to at the end of the namespace name with a "-" as prefix
 - To avoid wrong deletion, a label with `gitlab-origin` is added to each namespace which is used to discover the correct
 namespace when attempting to delete a namespace.
 
+### Sync Feature
+
+In addition to the webhook feature a recurring sync task is being executed every 3 hours, which
+synchronizes Gitlab with the K8s Cluster according to the following algorithm:
+
+1. Delete all Namespaces, which are present in the K8s Cluster, but do not correspond to an entity in Gitlab.
+(This is ensured by using the "gitlab-origin" label, which contains the original name of the entity from gitlab)
+
+
 ### Roles and Permissions
 
 We came up with a default for Roles and Persmissions as follows:

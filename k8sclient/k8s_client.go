@@ -33,9 +33,9 @@ func CreateNamespace(name string) {
 	check(err)
 }
 
-func DeleteNamespace(path string) {
+func DeleteNamespace(originalName string) {
 	k8sclient := getK8sClient()
-	correctNs := getActualNameSpaceName(path)
+	correctNs := getActualNameSpaceName(originalName)
 	if correctNs != "" {
 		err := k8sclient.Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
 		check(err)
@@ -118,6 +118,20 @@ func DeleteGroupRoleBinding(username, path, accessLevel string) {
 	if rolename != "" {
 		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(getRoleBindingName(username, rolename, getActualNameSpaceName(path)), &metav1.DeleteOptions{})
 	}
+}
+
+func GetAllNamespacesByOriginLabel() []string {
+	nsList, err := getK8sClient().CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: "gitlab-origin"})
+	if check(err) {
+		log.Fatal(err)
+	}
+	vsf := make([]string, 0)
+	for _, v := range nsList.Items {
+		if gitlabName := v.Labels["gitlab-origin"]; gitlabName != "" {
+			vsf = append(vsf, gitlabName)
+		}
+	}
+	return vsf
 }
 
 func getRoleBindingName(username, rolename, ns string) string {
