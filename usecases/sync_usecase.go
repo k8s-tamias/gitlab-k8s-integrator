@@ -28,6 +28,9 @@ Algo:
 		2.2.1 Create every rolebinding not present in the k8s set
    else:
 	2.1 Create namespace
+		2.1.1 If namespace is present by name, but does not have a gitlab-origin label attached
+		AND is not(!) labeled with 'gitlab-ignored' it get's labeled with its origin name.
+		Otherwise the naming collision is solved by suffixing the name with a counter
 	2.2 Create all rolebindings
 
  done
