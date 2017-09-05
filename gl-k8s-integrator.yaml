@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: gl-k8s-integrator
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: gl-k8s-integrator
+    spec:
+      containers:
+      - name: gl-k8s-integrator
+        image: nexus.informatik.haw-hamburg.de/gl-k8s-integrator:8478
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 250m
+            memory: 250Mi
+        env:
+        - name: GITLAB_HOSTNAME
+          value: "gitlab.informatik.haw-hamburg.de"
+        - name: GITLAB_API_VERSION
+          value: "v4"
+        - name: GITLAB_PRIVATE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-integrator-private-credentials
+              key: token
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10

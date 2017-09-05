@@ -17,10 +17,12 @@ func Listen(quit chan int) {
 	log.Fatal(http.ListenAndServe(":8080", router))
 	quit <- 0
 }
+
 func handleSync(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-
+		go usecases.PerformGlK8sSync()
+		w.WriteHeader(202)
 	}
 }
 

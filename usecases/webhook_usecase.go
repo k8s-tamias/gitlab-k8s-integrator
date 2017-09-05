@@ -3,7 +3,6 @@ package usecases
 import (
 	"encoding/json"
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
-	"log"
 	"time"
 )
 
@@ -24,6 +23,7 @@ type GitlabEvent struct {
 	UserEmail            string    `json:"user_email"`
 	UserName             string    `json:"user_name"`
 	UserUsername         string    `json:"user_username"`
+	UserCreatedUserName  string    `json:"username"`
 	UserId               int       `json:"user_id"`
 	GroupId              int       `json:"group_id"`
 	GroupName            string    `json:"group_name"`
@@ -70,7 +70,7 @@ func HandleGitlabEvent(body []byte) {
 		k8sclient.CreateNamespace(event.Path)
 
 	case "group_destroy":
-		k8sclient.DeleteNamespace(event.PathWithNameSpace)
+		k8sclient.DeleteNamespace(event.Path)
 
 	// group member operations
 
@@ -80,5 +80,11 @@ func HandleGitlabEvent(body []byte) {
 	case "user_remove_from_group":
 		k8sclient.DeleteGroupRoleBinding(event.UserUsername, event.PathWithNameSpace, event.GroupAccess)
 
+	case "user_created":
+		k8sclient.CreateNamespace(event.UserCreatedUserName)
+		k8sclient.CreateGroupRoleBinding(event.UserCreatedUserName, event.UserCreatedUserName, "Master")
+
+	case "user_destroy":
+		k8sclient.DeleteNamespace(event.UserCreatedUserName)
 	}
 }

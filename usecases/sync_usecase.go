@@ -3,8 +3,6 @@ package usecases
 import (
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabclient"
 	"log"
-	"net/http"
-	"os"
 	"time"
 )
 
@@ -36,7 +34,6 @@ Algo:
 */
 
 func PerformGlK8sSync() {
-	http.Get(os.Getenv("GITLAB_URL") + "")
 	gitlabContent, err := gitlabclient.GetFullGitlabContent()
 	if check(err) {
 		return
