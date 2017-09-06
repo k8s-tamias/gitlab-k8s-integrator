@@ -36,6 +36,8 @@ Algo:
 
 */
 
+// TODO : Cache Webhooks while Sync is running and execute them later!
+
 func PerformGlK8sSync() {
 	gitlabContent, err := gitlabclient.GetFullGitlabContent()
 	if check(err) {
