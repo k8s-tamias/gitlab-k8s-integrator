@@ -14,7 +14,6 @@ What to fetch from k8s api
 
 What to get from gitlab
 - get all groups
-- get all subgroups
 - get all projects
 - get all users (private namespace)
 
@@ -44,13 +43,13 @@ func PerformGlK8sSync() {
 	}
 
 	// 1. delete all Namespaces which are not in the gitlab set
-	namespaces := k8sclient.GetAllNamespacesByOriginLabel()
+	gitlabNamespacesInK8s := k8sclient.GetAllGitlabOriginNamesFromNamespacesWithOriginLabel()
 
-	for _, namespace := range namespaces {
+	for _, originalName := range gitlabNamespacesInK8s {
 		delete := true
 
 		for _, user := range gitlabContent.Users {
-			if namespace == user.Username {
+			if originalName == user.Username {
 				delete = false
 				break
 			}
@@ -58,7 +57,7 @@ func PerformGlK8sSync() {
 
 		if delete == true {
 			for _, project := range gitlabContent.Projects {
-				if namespace == project.PathWithNameSpace {
+				if originalName == project.PathWithNameSpace {
 					delete = false
 					break
 				}
@@ -67,7 +66,7 @@ func PerformGlK8sSync() {
 
 		if delete == true {
 			for _, group := range gitlabContent.Groups {
-				if namespace == group.FullPath {
+				if originalName == group.FullPath {
 					delete = false
 					break
 				}
@@ -75,9 +74,112 @@ func PerformGlK8sSync() {
 		}
 
 		if delete {
-			k8sclient.DeleteNamespace(namespace)
+			k8sclient.DeleteNamespace(originalName)
 		}
 	}
+
+	// 2. iterate all gitlab "namespaces"
+	for _, user := range gitlabContent.Users {
+		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
+		if actualNamespace != "" {
+			// namespace is present, check rolebindings
+			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
+
+			expectedGitlabRolebindingName := k8sclient.ConstructRoleBindingName(user.Username, k8sclient.GetGroupRoleName("Master"), actualNamespace)
+			// 2.1 Iterate all roleBindings
+			for rb := range k8sRoleBindings {
+				if rb != expectedGitlabRolebindingName {
+					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
+				}
+			}
+			// make sure the project's role binding is present
+			if !k8sRoleBindings[expectedGitlabRolebindingName] {
+				k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
+			}
+
+		} else {
+			// create Namespace & RoleBinding
+			k8sclient.CreateNamespace(user.Username)
+			k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
+		}
+	}
+
+	// same same for Groups
+	for _, group := range gitlabContent.Groups {
+		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(group.FullPath)
+		if actualNamespace != "" {
+			// namespace is present, check rolebindings
+			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
+
+			// get expectedRoleBindings by retrieved Members
+			expectedRoleBindings := map[string]bool{}
+			for _, member := range group.Members {
+				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
+				roleName := k8sclient.GetGroupRoleName(accessLevel)
+				rbName := k8sclient.ConstructRoleBindingName(member.Username, roleName, actualNamespace)
+				expectedRoleBindings[rbName] = true
+
+				// make sure the project's expected rolebindings are present
+				if !k8sRoleBindings[rbName] {
+					k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
+				}
+			}
+
+			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
+			for rb := range k8sRoleBindings {
+				if !expectedRoleBindings[rb] {
+					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
+				}
+			}
+
+		} else {
+			// create Namespace & RoleBinding
+			k8sclient.CreateNamespace(group.FullPath)
+			for _, member := range group.Members {
+				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
+				k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
+			}
+		}
+	}
+
+	// same same for Projects
+	for _, project := range gitlabContent.Projects {
+		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(project.PathWithNameSpace)
+		if actualNamespace != "" {
+			// namespace is present, check rolebindings
+			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
+
+			// get expectedRoleBindings by retrieved Members
+			expectedRoleBindings := map[string]bool{}
+			for _, member := range project.Members {
+				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
+				roleName := k8sclient.GetGroupRoleName(accessLevel)
+				rbName := k8sclient.ConstructRoleBindingName(member.Username, roleName, actualNamespace)
+				expectedRoleBindings[rbName] = true
+
+				// make sure the project's expected rolebindings are present
+				if !k8sRoleBindings[rbName] {
+					k8sclient.CreateGroupRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+				}
+			}
+
+			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
+			for rb := range k8sRoleBindings {
+				if !expectedRoleBindings[rb] {
+					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
+				}
+			}
+
+		} else {
+			// create Namespace & RoleBinding
+			k8sclient.CreateNamespace(project.PathWithNameSpace)
+			for _, member := range project.Members {
+				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
+				k8sclient.CreateGroupRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+			}
+		}
+	}
+
 
 }
 

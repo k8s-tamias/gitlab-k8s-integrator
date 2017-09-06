@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"os"
 )
 
 func TestGetAllGroups(t *testing.T) {
+	os.Setenv("GITLAB_HOSTNAME", "gitlab.informatik.haw-hamburg.de")
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		//w.Header().Set("Link", `<https://gitlab.informatik.haw-hamburg.de/api/v4/groups?order_by=name&owned=false&page=2&per_page=20&sort=asc&statistics=false>; rel="next", <https://gitlab.informatik.haw-hamburg.de/api/v4/groups?order_by=name&owned=false&page=1&per_page=20&sort=asc&statistics=false>; rel="first", <https://gitlab.informatik.haw-hamburg.de/api/v4/groups?order_by=name&owned=false&page=17&per_page=20&sort=asc&statistics=false>; rel="last"`)
@@ -307,6 +309,7 @@ func TestGetAllGroups(t *testing.T) {
 }
 
 func TestGetAllProjects(t *testing.T) {
+	os.Setenv("GITLAB_HOSTNAME", "gitlab.informatik.haw-hamburg.de")
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, `[

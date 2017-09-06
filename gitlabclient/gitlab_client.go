@@ -9,18 +9,31 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 type GitlabGroup struct {
-	FullPath string `json:"full_path"`
+	Id			int
+	FullPath 	string `json:"full_path"`
+	Members  	[]Member
 }
 
 type GitlabProject struct {
-	PathWithNameSpace string `json:"path_with_namespace"`
+	Id					int
+	PathWithNameSpace 	string `json:"path_with_namespace"`
+	Members 		  	[]Member
 }
 
 type GitlabUser struct {
 	Username string `json:"username"`
+}
+
+type Member struct {
+	Id			int 	`json:"id"`
+	Username 	string 	`json:"username"`
+	Name		string 	`json:"name"`
+	State		string 	`json:"state"`
+	AccessLevel	int		`json:"access_level"`
 }
 
 type GitlabContent struct {
@@ -48,28 +61,12 @@ func GetFullGitlabContent() (GitlabContent, error) {
 	return GitlabContent{Groups: foundGroups, Projects: foundProjects, Users: foundUsers}, nil
 }
 
-func getGitlabBaseUrl() string {
-	return fmt.Sprintf("https://%s/api/%s/", os.Getenv("GITLAB_HOSTNAME"), os.Getenv("GITLAB_API_VERSION"))
-}
-
-func performGitlabHTTPRequest(url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if check(err) {
-		log.Fatal("Fatal Error while creating new HTTP Request! Err:" + err.Error())
-	}
-
-	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
-	req.Header.Add("SUDO", os.Getenv("GITLAB_ADMIN_USER"))
-	result, err := http.DefaultClient.Do(req)
-	return result, err
-
-}
-
 func GetAllGroups(gitlabGroups []GitlabGroup, url string) ([]GitlabGroup, error) {
 	result, err := performGitlabHTTPRequest(url)
 
 	if check(err) {
 		log.Println("Error occured while calling Gitlab! Cancelling Sync! Err:" + err.Error())
+		return nil, err
 	}
 	if result.StatusCode == 401 {
 		return nil, errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
@@ -79,6 +76,11 @@ func GetAllGroups(gitlabGroups []GitlabGroup, url string) ([]GitlabGroup, error)
 	groups := make([]GitlabGroup, 0)
 
 	json.Unmarshal(content, &groups)
+
+	for _, group := range groups {
+		err := group.getMembers()
+		check(err)
+	}
 
 	gitlabGroups = append(groups, gitlabGroups...)
 
@@ -108,6 +110,11 @@ func GetAllProjects(gitlabProjects []GitlabProject, url string) ([]GitlabProject
 	projects := make([]GitlabProject, 0)
 
 	json.Unmarshal(content, &projects)
+
+	for _, project := range projects {
+		err := project.getMembers()
+		check(err)
+	}
 
 	gitlabProjects = append(projects, gitlabProjects...)
 
@@ -150,6 +157,89 @@ func GetAllUsers(gitlabUsers []GitlabUser, url string) ([]GitlabUser, error) {
 		gitlabUsers = finalUsers
 	}
 	return gitlabUsers, nil
+}
+
+func TranslateIntAccessLevels(lvl int) string {
+	level := "default"
+	switch lvl {
+	case 20:
+		level = "Reporter"
+	case 30:
+		level = "Developer"
+	case 40:
+		level = "Master"
+	case 50:
+		level = "Master" // owner has same rights in k8s
+	}
+	return level
+}
+
+func (g *GitlabGroup) getMembers() error {
+	url := getGitlabBaseUrl() + "groups" + strconv.Itoa(g.Id) + "/members"
+	result, err := performGitlabHTTPRequest(url)
+
+	if check(err) {
+		log.Println("Error occured while calling Gitlab! Cancelling Sync! Err:" + err.Error())
+		return err
+	}
+	if result.StatusCode == 401 {
+		return errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
+	}
+	if result.StatusCode == 404{
+		return errors.New("The requested URL was invalid! Stopping now.")
+	}
+
+	content, err := ioutil.ReadAll(result.Body)
+
+	members := make([]Member,0)
+	json.Unmarshal(content, &members)
+
+	g.Members = members
+
+	return nil
+}
+
+func (p *GitlabProject) getMembers() error {
+	url := getGitlabBaseUrl() + "projects/" + strconv.Itoa(p.Id) + "/members"
+	result, err := performGitlabHTTPRequest(url)
+
+	if check(err) {
+		log.Println("Error occured while calling Gitlab! Cancelling Sync! Err:" + err.Error())
+		return err
+	}
+	if result.StatusCode == 401 {
+		return errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
+	}
+	if result.StatusCode == 404{
+		return errors.New("The requested URL was invalid! Stopping now.")
+	}
+
+	content, err := ioutil.ReadAll(result.Body)
+
+	members := make([]Member,0)
+	json.Unmarshal(content, &members)
+
+	p.Members = members
+
+	return nil
+}
+
+func getGitlabBaseUrl() string {
+	apiVersion := os.Getenv("GITLAB_API_VERSION")
+	if apiVersion == "" { apiVersion = "v4" }
+	return fmt.Sprintf("https://%s/api/%s/", os.Getenv("GITLAB_HOSTNAME"), apiVersion)
+}
+
+func performGitlabHTTPRequest(url string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if check(err) {
+		log.Fatal("Fatal Error while creating new HTTP Request! Err:" + err.Error())
+	}
+
+	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
+	result, err := http.DefaultClient.Do(req)
+	return result, err
+
 }
 
 func check(err error) bool {
