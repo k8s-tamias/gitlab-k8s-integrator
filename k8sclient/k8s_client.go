@@ -59,7 +59,7 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 
 	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: ConstructRoleBindingName(username, rolename, ns), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
-		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetProjectRoleName(accessLevel)}}
+		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetProjectRoleName(accessLevel), APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	if check(err) {
@@ -98,7 +98,7 @@ func CreateGroupRoleBinding(username, path, accessLevel string) {
 
 	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: ConstructRoleBindingName(username, rolename, ns), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
-		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetGroupRoleName(accessLevel)}}
+		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetGroupRoleName(accessLevel), APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	if check(err) {
@@ -350,7 +350,6 @@ func getK8sClient() *kubernetes.Clientset {
 
 func check(err error) bool {
 	if err != nil {
-		log.Println("Error : ", err.Error())
 		return true
 	}
 	return false
