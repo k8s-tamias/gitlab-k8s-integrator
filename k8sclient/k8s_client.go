@@ -41,11 +41,13 @@ func CreateNamespace(name string) {
 }
 
 func DeleteNamespace(originalName string) {
-	k8sclient := getK8sClient()
+	client := getK8sClient()
 	correctNs := GetActualNameSpaceNameByGitlabName(originalName)
 	if correctNs != "" {
-		err := k8sclient.Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
-		check(err)
+		err := client.Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
+		if check(err) {
+			log.Fatal("Deletion of Namespace failed with error: " + err.Error())
+		}
 	}
 }
 
@@ -135,7 +137,11 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 	}
 	vsf := make([]string, 0)
 	for _, v := range nsList.Items {
-		if gitlabName := v.Labels["gitlab-origin"]; gitlabName != "" {
+		if labelName := v.Labels["gitlab-origin"]; labelName != "" {
+			gitlabName, err := K8sLabelToGitlabName(labelName)
+			if check(err) {
+				log.Fatal("Error while transforming labelName back to Gitlab Name. Err: "+ err.Error())
+			}
 			vsf = append(vsf, gitlabName)
 		}
 	}
@@ -159,9 +165,9 @@ func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 		log.Fatal("Error while retrieving namespaces: " + err.Error())
 	}
 	if len(namespaces.Items) > 1 {
-		log.Println("WARNING: Found mutliple namespaces with gitlab-origin= " + gitlabOriginName + ". This is potentially very bad, consult a cloud admin!")
+		log.Println("WARNING: Found mutliple namespaces with gitlab-origin= " + k8sName + ". This is potentially very bad, consult a cloud admin!")
 	} else if len(namespaces.Items) < 1 {
-		log.Println("INFO: No namespace has been found with gitlab-origin=" + gitlabOriginName + ".")
+		log.Println("INFO: No namespace has been found with gitlab-origin=" + k8sName + ".")
 	} else {
 		correctName = namespaces.Items[0].Name
 	}
