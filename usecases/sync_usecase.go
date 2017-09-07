@@ -187,7 +187,7 @@ func PerformGlK8sSync() {
 			}
 		}
 	}
-
+	log.Println("Finished Synchronization run.")
 
 }
 
