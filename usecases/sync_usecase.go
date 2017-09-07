@@ -167,14 +167,14 @@ func PerformGlK8sSync() {
 
 				// make sure the project's expected rolebindings are present
 				if !k8sRoleBindings[rbName] {
-					k8sclient.CreateGroupRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+					k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
 				}
 			}
 
 			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
 			for rb := range k8sRoleBindings {
 				if !expectedRoleBindings[rb] {
-					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
+					k8sclient.DeleteProjectRoleBindingByName(rb, actualNamespace)
 				}
 			}
 

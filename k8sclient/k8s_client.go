@@ -59,7 +59,10 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
 		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetProjectRoleName(accessLevel)}}
 
-	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	if check(err) {
+		log.Fatal("Communication with K8s Server threw error, while creating RoleBinding. Err: " + err.Error())
+	}
 }
 
 func DeleteProjectRoleBinding(username, path, accessLevel string) {
@@ -71,9 +74,19 @@ func DeleteProjectRoleBinding(username, path, accessLevel string) {
 	rolename := GetProjectRoleName(accessLevel)
 
 	if rolename != "" {
-		getK8sClient().RbacV1beta1().RoleBindings(ns).Delete(ConstructRoleBindingName(username, rolename, GetActualNameSpaceNameByGitlabName(path)), &metav1.DeleteOptions{})
+		roleBindingName := ConstructRoleBindingName(username, rolename, GetActualNameSpaceNameByGitlabName(path))
+		DeleteProjectRoleBindingByName(roleBindingName, ns)
 	}
 }
+
+func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string){
+	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
+	if check(err) {
+		log.Fatal("Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
+	}
+}
+
+
 
 func CreateGroupRoleBinding(username, path, accessLevel string) {
 	ns := GetActualNameSpaceNameByGitlabName(path)
@@ -85,7 +98,10 @@ func CreateGroupRoleBinding(username, path, accessLevel string) {
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
 		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetGroupRoleName(accessLevel)}}
 
-	getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	if check(err) {
+		log.Fatal("Communication with K8s Server threw error, while creating RoleBinding. Err: " + err.Error())
+	}
 }
 
 func DeleteGroupRoleBinding(username, path, accessLevel string) {
