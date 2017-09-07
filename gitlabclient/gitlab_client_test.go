@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"os"
 )
 
 func TestGetAllGroups(t *testing.T) {

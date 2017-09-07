@@ -26,7 +26,7 @@ buildAndTest:
     GOOS: "linux"
   script:
     - dep ensure -v
-    - go test gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME/$(glide novendor)
+    - go test $(go list ./... | grep -v /vendor/)
     - go build -a -installsuffix cgo gitlab.informatik.haw-hamburg.de/icc/$SERVICE_NAME
     - mv ./$SERVICE_NAME /$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/$SERVICE_NAME
   artifacts:
