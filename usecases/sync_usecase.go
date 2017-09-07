@@ -46,8 +46,10 @@ func PerformGlK8sSync() {
 	}
 
 	// 1. delete all Namespaces which are not in the gitlab set
+	log.Println("Getting Gitlab Contents...")
 	gitlabNamespacesInK8s := k8sclient.GetAllGitlabOriginNamesFromNamespacesWithOriginLabel()
 
+	log.Println("Deleting all namespaces which are no longer in the gitlab namespace...")
 	for _, originalName := range gitlabNamespacesInK8s {
 		delete := true
 
@@ -81,6 +83,7 @@ func PerformGlK8sSync() {
 		}
 	}
 
+	log.Println("Syncing Gitlab Users...")
 	// 2. iterate all gitlab "namespaces"
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
@@ -107,6 +110,7 @@ func PerformGlK8sSync() {
 		}
 	}
 
+	log.Println("Syncing Gitlab Groups...")
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(group.FullPath)
@@ -145,6 +149,7 @@ func PerformGlK8sSync() {
 		}
 	}
 
+	log.Println("Syncing Gitlab Projects...")
 	// same same for Projects
 	for _, project := range gitlabContent.Projects {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(project.PathWithNameSpace)

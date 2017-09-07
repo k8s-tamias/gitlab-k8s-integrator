@@ -175,7 +175,7 @@ func TranslateIntAccessLevels(lvl int) string {
 }
 
 func (g *GitlabGroup) getMembers() error {
-	url := getGitlabBaseUrl() + "groups" + strconv.Itoa(g.Id) + "/members"
+	url := getGitlabBaseUrl() + "groups/" + strconv.Itoa(g.Id) + "/members"
 	result, err := performGitlabHTTPRequest(url)
 
 	if check(err) {
@@ -211,7 +211,7 @@ func (p *GitlabProject) getMembers() error {
 		return errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
 	}
 	if result.StatusCode == 404{
-		return errors.New("The requested URL was invalid! Stopping now.")
+		return errors.New("The requested URL was invalid! Stopping now. Url was: "+ url)
 	}
 
 	content, err := ioutil.ReadAll(result.Body)

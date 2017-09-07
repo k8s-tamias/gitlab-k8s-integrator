@@ -17,12 +17,17 @@ import (
 )
 
 func CreateNamespace(name string) {
-	nsName, err := getK8sCompatibleNamespaceName(name)
+	nsName, err := GitlabNameToK8sNamespace(name)
 	if check(err) {
 		log.Fatal(err)
 	}
 
-	_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": name}}})
+	labelName, err := GitlabNameToK8sLabel(name)
+	if check(err) {
+		log.Fatal("Error while transforming gitlab name to k8s label: " + err.Error())
+	}
+
+	_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 
 	// if error is due to namespace name collision, retry with suffixed number
 	// TODO Solve collision with already present namespaces that do not have gitlab-origin, but gitlab-ignored
@@ -30,7 +35,7 @@ func CreateNamespace(name string) {
 	for k8serrors.IsAlreadyExists(err) {
 		i++
 		nsName = nsName + "-" + strconv.Itoa(i)
-		_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": name}}})
+		_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 	}
 	check(err)
 }
@@ -58,7 +63,7 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 }
 
 func DeleteProjectRoleBinding(username, path, accessLevel string) {
-	ns, err := getK8sCompatibleNamespaceName(path)
+	ns, err := GitlabNameToK8sNamespace(path)
 	if check(err) {
 		log.Fatal(err)
 	}
@@ -85,7 +90,7 @@ func CreateGroupRoleBinding(username, path, accessLevel string) {
 
 func DeleteGroupRoleBinding(username, path, accessLevel string) {
 
-	ns, err := getK8sCompatibleNamespaceName(path)
+	ns, err := GitlabNameToK8sNamespace(path)
 	if check(err) {
 		log.Fatal(err)
 	}
@@ -126,15 +131,21 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 	correctName := ""
 
-	k8sclient := getK8sClient()
-	namespaces, err := k8sclient.CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: "gitlab-origin=" + gitlabOriginName})
+	client := getK8sClient()
+
+	k8sName, err := GitlabNameToK8sLabel(gitlabOriginName)
+	if check(err) {
+		log.Fatal("Error while transforming gitlab name to k8s label: " + err.Error())
+	}
+
+	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: "gitlab-origin=" + k8sName})
 	if check(err) {
 		log.Fatal("Error while retrieving namespaces: " + err.Error())
 	}
 	if len(namespaces.Items) > 1 {
 		log.Println("WARNING: Found mutliple namespaces with gitlab-origin= " + gitlabOriginName + ". This is potentially very bad, consult a cloud admin!")
 	} else if len(namespaces.Items) < 1 {
-		log.Println("INFO: No namespace has been found with gitlab-origin= " + gitlabOriginName + ". Check if namespace still exsists in K8s Cluster!")
+		log.Println("INFO: No namespace has been found with gitlab-origin=" + gitlabOriginName + ".")
 	} else {
 		correctName = namespaces.Items[0].Name
 	}
@@ -163,7 +174,7 @@ func ConstructRoleBindingName(username, rolename, ns string) string {
 
 // Internal Functions
 
-func getK8sCompatibleNamespaceName(givenName string) (string, error) {
+func GitlabNameToK8sNamespace(givenName string) (string, error) {
 	nsName := strings.ToLower(givenName)
 
 	replacer := strings.NewReplacer(" ", "",
@@ -188,6 +199,59 @@ func getK8sCompatibleNamespaceName(givenName string) (string, error) {
 	}
 
 	return nsName, nil
+}
+
+func GitlabNameToK8sLabel(givenName string) (string, error){
+	/*
+	Rules:
+	1) “.” -> “.”
+	2) “-” -> “-”
+	3) “_” -> “__”
+	4) “/” -> “_”
+ 	*/
+	replacer := strings.NewReplacer("_", "__",
+		"/", "_")
+
+	labelName := replacer.Replace(givenName)
+	// regex for checking k8s namespace name
+	regex, err := regexp.Compile("(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
+
+	if check(err) {
+		return "", err
+	}
+
+	if !regex.MatchString(labelName) {
+		return "", errors.New("Created Namespace name did not adhere to rules")
+	}
+
+	return labelName, nil
+}
+
+func K8sLabelToGitlabName(givenName string) (string, error){
+	/*
+	Rules:
+	1) “.” <- “.”
+	2) “-” <- “-”
+	3) “_” <- “__”
+	4) “/” <- “_”
+	 */
+	// Path can contain only letters, digits, '_', '-' and '.'. Cannot start with '-' or end in '.', '.git' or '.atom'.
+	replacer := strings.NewReplacer("__", "_",
+		"_", "/")
+
+	labelName := replacer.Replace(givenName)
+	// regex for checking gitlab namespace name
+	regex, err := regexp.Compile("(?:[a-zA-Z0-9_.][a-zA-Z0-9_.]*[a-zA-Z0-9_-]|[a-zA-Z0-9_])")
+
+	if check(err) {
+		return "", err
+	}
+
+	if !regex.MatchString(labelName) {
+		return "", errors.New("Created Gitlab Label name did not adhere to rules")
+	}
+
+	return labelName, nil
 }
 
 func GetProjectRoleName(accessLevel string) string {
