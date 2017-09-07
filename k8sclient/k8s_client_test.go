@@ -1,6 +1,9 @@
 package k8sclient
 
-import "testing"
+import (
+	"testing"
+	"fmt"
+)
 
 /*
 Rules:
@@ -52,4 +55,9 @@ func TestK8sLabelToGitlabName(t *testing.T) {
 	g4, err := K8sLabelToGitlabName(k4)
 	if err != nil {t.Error(err)}
 	if g4 != "uP-uP-Chief" { t.Error("Incorrect replacement of '/'. Res: "+ g4)}
+}
+
+func TestGetGroupRoleName(t *testing.T) {
+	master_role := GetGroupRoleName("Master")
+	if master_role != "gitlab-group-master" { t.Error(fmt.Sprintf("Expected gitlab-group-master , but was %s", master_role))}
 }

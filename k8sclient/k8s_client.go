@@ -59,7 +59,7 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 
 	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: ConstructRoleBindingName(username, rolename, ns), Namespace: ns},
 		Subjects: []v1beta1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
-		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetProjectRoleName(accessLevel), APIGroup: "rbac.authorization.k8s.io"}}
+		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	if check(err) {
@@ -308,23 +308,23 @@ func GetGroupRoleName(accessLevel string) string {
 	rname := ""
 	switch accessLevel {
 	case "Master":
-		rname := os.Getenv("GROUP_MASTER_ROLENAME")
+		rname = os.Getenv("GROUP_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-master"
 		}
 	case "Reporter":
-		rname := os.Getenv("GROUP_REPORTER_ROLENAME")
+		rname = os.Getenv("GROUP_REPORTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-reporter"
 		}
 	case "Developer":
-		rname := os.Getenv("GROUP_DEVELOPER_ROLENAME")
+		rname = os.Getenv("GROUP_DEVELOPER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-developer"
 		}
 
 	default:
-		rname := os.Getenv("GROUP_DEFAULT_ROLENAME")
+		rname = os.Getenv("GROUP_DEFAULT_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-guest"
 		}
