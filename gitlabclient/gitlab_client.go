@@ -195,7 +195,9 @@ func (g *GitlabGroup) getMembers() error {
 	json.Unmarshal(content, &members)
 
 	g.Members = members
-
+	if len(g.Members) == 0{
+		log.Fatal(fmt.Sprintf("No Group Members were found for group %s . StatusCode of Request was: %d", g.FullPath, result.StatusCode))
+	}
 	return nil
 }
 
@@ -220,6 +222,10 @@ func (p *GitlabProject) getMembers() error {
 	json.Unmarshal(content, &members)
 
 	p.Members = members
+
+	if len(p.Members) == 0{
+		log.Fatal(fmt.Sprintf("No Project Members were found for project %s . StatusCode of Request was: %d", p.PathWithNameSpace, result.StatusCode))
+	}
 
 	return nil
 }
