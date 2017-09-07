@@ -12,7 +12,7 @@ func Listen(quit chan int) {
 	router := http.NewServeMux()
 	router.HandleFunc("/healthz", handleHealthz)
 	router.HandleFunc("/", handleGitlabWebhook)
-	router.HandleFunc("sync", handleSync)
+	router.HandleFunc("/sync", handleSync)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	quit <- 0
