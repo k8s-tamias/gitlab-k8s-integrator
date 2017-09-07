@@ -183,7 +183,7 @@ func PerformGlK8sSync() {
 			k8sclient.CreateNamespace(project.PathWithNameSpace)
 			for _, member := range project.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
-				k8sclient.CreateGroupRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+				k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
 			}
 		}
 	}
