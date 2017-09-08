@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func CreateNamespace(name string) {
@@ -37,8 +38,9 @@ func CreateNamespace(name string) {
 		}
 		if ns.Labels["gitlab-ignored"] == ""{
 			// add label to already present namespace
-			ns.Labels["gitlab-origin"] = labelName
-			_, err := client.Namespaces().Update(ns)
+			patchContent := fmt.Sprintf(`{"metadata":{"labels":{"gitlab-origin":"%s"}}}`, labelName)
+			patchByteArray := []byte(patchContent)
+			_, err := client.Namespaces().Patch(nsName, types.MergePatchType, patchByteArray)
 			if check(err) {
 				log.Fatal("Error while Updating namespace. Error: " + err.Error())
 			}
