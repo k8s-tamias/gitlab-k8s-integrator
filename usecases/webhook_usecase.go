@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
 	"time"
+	"log"
+	"fmt"
 )
 
 type GitlabEvent struct {
@@ -43,48 +45,60 @@ func HandleGitlabEvent(body []byte) {
 	// project operations
 
 	case "project_create":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Creating Namespace for %s", event.PathWithNameSpace))
 		k8sclient.CreateNamespace(event.PathWithNameSpace)
 
 	case "project_destroy":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Deleting Namespace for %s", event.PathWithNameSpace))
 		k8sclient.DeleteNamespace(event.PathWithNameSpace)
 
 	case "project_rename":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Rename: Deleting %s and Recreating Namespace for %s", event.OldPathWithNamespace, event.PathWithNameSpace))
 		k8sclient.DeleteNamespace(event.OldPathWithNamespace)
 		k8sclient.CreateNamespace(event.PathWithNameSpace)
 
 	case "project_transferred":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Transfer: Deleting %s and Recreating Namespace for %s", event.OldPathWithNamespace, event.PathWithNameSpace))
 		k8sclient.DeleteNamespace(event.OldPathWithNamespace)
 		k8sclient.CreateNamespace(event.PathWithNameSpace)
 
 	// project member operations
 
 	case "user_add_to_team":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Create RoleBinding for %s in %s as %s", event.UserUsername, event.PathWithNameSpace, event.ProjectAccess))
 		k8sclient.CreateProjectRoleBinding(event.UserUsername, event.PathWithNameSpace, event.ProjectAccess)
 
 	case "user_remove_from_team":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete RoleBinding for %s in %s as %s", event.UserUsername, event.PathWithNameSpace, event.ProjectAccess))
 		k8sclient.DeleteProjectRoleBinding(event.UserUsername, event.PathWithNameSpace, event.ProjectAccess)
 
 	// group operations
 
 	case "group_create":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Creating Namespace for %s", event.Path))
 		k8sclient.CreateNamespace(event.Path)
 
 	case "group_destroy":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Deleting Namespace for %s", event.Path))
 		k8sclient.DeleteNamespace(event.Path)
 
 	// group member operations
 
 	case "user_add_to_group":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Create RoleBinding for %s in %s as %s", event.UserUsername, event.PathWithNameSpace, event.ProjectAccess))
 		k8sclient.CreateGroupRoleBinding(event.UserUsername, event.PathWithNameSpace, event.GroupAccess)
 
 	case "user_remove_from_group":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete RoleBinding for %s in %s as %s", event.UserUsername, event.PathWithNameSpace, event.ProjectAccess))
 		k8sclient.DeleteGroupRoleBinding(event.UserUsername, event.PathWithNameSpace, event.GroupAccess)
 
 	case "user_created":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Create Namespace and RoleBinding for %s in %s as %s", event.UserCreatedUserName, event.UserCreatedUserName, event.ProjectAccess))
 		k8sclient.CreateNamespace(event.UserCreatedUserName)
 		k8sclient.CreateGroupRoleBinding(event.UserCreatedUserName, event.UserCreatedUserName, "Master")
 
 	case "user_destroy":
+		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete Namespace for %s", event.UserCreatedUserName))
 		k8sclient.DeleteNamespace(event.UserCreatedUserName)
 	}
 }
