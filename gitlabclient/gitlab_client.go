@@ -196,7 +196,7 @@ func (g *GitlabGroup) getMembers() error {
 
 	g.Members = members
 	if len(g.Members) == 0{
-		log.Fatal(fmt.Sprintf("No Group Members were found for group %s . StatusCode of Request was: %d", g.FullPath, result.StatusCode))
+		log.Println(fmt.Sprintf("WARNING: No Group Members were found for group %s . StatusCode of Request was: %d . This is a potential bug in Gitlab, will continue to sync anyway", g.FullPath, result.StatusCode))
 	}
 	return nil
 }
@@ -224,7 +224,7 @@ func (p *GitlabProject) getMembers() error {
 	p.Members = members
 
 	if len(p.Members) == 0{
-		log.Fatal(fmt.Sprintf("No Project Members were found for project %s . StatusCode of Request was: %d", p.PathWithNameSpace, result.StatusCode))
+		log.Println(fmt.Sprintf("WARNING: No Project Members were found for project %s . StatusCode of Request was: %d . This is a potential bug in Gitlab, will continue to sync anyway", p.PathWithNameSpace, result.StatusCode))
 	}
 
 	return nil

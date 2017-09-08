@@ -52,8 +52,8 @@ func CreateNamespace(name string) {
 			nsName = nsName + "-" + strconv.Itoa(i)
 			_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 		}
-
 	}
+
 	check(err)
 }
 
@@ -104,8 +104,6 @@ func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string){
 		log.Fatal("Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
 	}
 }
-
-
 
 func CreateGroupRoleBinding(username, path, accessLevel string) {
 	ns := GetActualNameSpaceNameByGitlabName(path)
