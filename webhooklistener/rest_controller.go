@@ -6,13 +6,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func Listen(quit chan int) {
 	router := http.NewServeMux()
 	router.HandleFunc("/healthz", handleHealthz)
 	router.HandleFunc("/", handleGitlabWebhook)
-	//router.HandleFunc("/sync", handleSync)
+	if enableSyncEndpoint := os.Getenv("ENABLE_SYNC_ENDPOINT"); enableSyncEndpoint == "true" {
+		router.HandleFunc("/sync", handleSync)
+	}
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 	quit <- 0
