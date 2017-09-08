@@ -57,7 +57,7 @@ func HandleGitlabEvent(body []byte) {
 		k8sclient.DeleteNamespace(event.OldPathWithNamespace)
 		k8sclient.CreateNamespace(event.PathWithNameSpace)
 
-	case "project_transferred":
+	case "project_transfer":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Transfer: Deleting %s and Recreating Namespace for %s", event.OldPathWithNamespace, event.PathWithNameSpace))
 		k8sclient.DeleteNamespace(event.OldPathWithNamespace)
 		k8sclient.CreateNamespace(event.PathWithNameSpace)
