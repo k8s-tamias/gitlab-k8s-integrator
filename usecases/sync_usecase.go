@@ -103,6 +103,9 @@ func PerformGlK8sSync() {
 				k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
 			}
 
+			// finally check if namespace has CEPHSecretUser
+			k8sclient.DeployCEPHSecretUser(actualNamespace)
+
 		} else {
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(user.Username)
@@ -138,6 +141,8 @@ func PerformGlK8sSync() {
 					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
 				}
 			}
+			// finally check if namespace has CEPHSecretUser
+			k8sclient.DeployCEPHSecretUser(actualNamespace)
 
 		} else {
 			// create Namespace & RoleBinding
@@ -178,6 +183,8 @@ func PerformGlK8sSync() {
 				}
 			}
 
+			// finally check if namespace has CEPHSecretUser
+			k8sclient.DeployCEPHSecretUser(actualNamespace)
 		} else {
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(project.PathWithNameSpace)

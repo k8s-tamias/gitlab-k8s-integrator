@@ -56,7 +56,31 @@ func CreateNamespace(name string) {
 		}
 	}
 
+	// finally deploy CEPH Secret User if specified via ENV var
+	DeployCEPHSecretUser(nsName)
+
 	check(err)
+}
+
+func DeployCEPHSecretUser(namespace string){
+	if userKey := os.Getenv("CEPH_USER_KEY"); userKey != "" {
+		client := getK8sClient()
+		_, err := client.CoreV1().Secrets(namespace).Create(&v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "ceph-secret-user",
+				Namespace: namespace,
+			},
+			Data: map[string][]byte{"key": []byte(userKey)},
+			Type: "kubernetes.io/rbd",
+		})
+		if err != nil && !k8serrors.IsAlreadyExists(err) {
+			log.Fatalln("Error creating CEPH Secret User. Error was: " + err.Error())
+		}
+	}
 }
 
 func DeleteNamespace(originalName string) {
