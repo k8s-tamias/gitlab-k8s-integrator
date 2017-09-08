@@ -32,6 +32,20 @@ synchronizes Gitlab with the K8s Cluster according to the following algorithm:
 1. Delete all Namespaces, which are present in the K8s Cluster, but do not correspond to an entity in Gitlab.
 (This is ensured by using the "gitlab-origin" label, which contains the original name of the entity from gitlab)
 
+### CEPH Secret User Features
+In order to allow for all namespaces to access a DefaultStorageClass of type CEPH, this 
+service will automatically create a ceph-secret-user Secret in every created namespace if 
+ENV 'CEPH_USER_KEY' is set. (see below)
+
+### Config ENV Variables
+
+| ENV        | Required? | Description           | 
+|:-------------:|:-------------:|:-------------:|
+|GITLAB_HOSTNAME | yes | The hostname of the Gitlab server to work with
+|GITLAB_API_VERSION| no (default: v4) | The Version of the Gitlab API to use.
+|GITLAB_PRIVATE_TOKEN| yes | The private access token from a Gitlab admin user to use when calling the API
+|CEPH_USER_KEY| no | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
+
 
 ### Roles and Permissions
 
