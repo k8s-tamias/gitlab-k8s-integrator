@@ -26,16 +26,33 @@ func CreateNamespace(name string) {
 	if check(err) {
 		log.Fatal("Error while transforming gitlab name to k8s label: " + err.Error())
 	}
+	client := getK8sClient()
+	_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 
-	_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
+	// if the already present namespace does not have "gitlab-ignored" label, we will update it with a  gitlab-origin label
+	if k8serrors.IsAlreadyExists(err) {
+		ns, err := getK8sClient().Namespaces().Get(nsName, metav1.GetOptions{})
+		if check(err) {
+			log.Fatal("Error while retrieving namespace. Error: " + err.Error())
+		}
+		if ns.Labels["gitlab-ignored"] == ""{
+			// add label to already present namespace
+			ns.Labels["gitlab-origin"] = labelName
+			_, err := client.Namespaces().Update(ns)
+			if check(err) {
+				log.Fatal("Error while Updating namespace. Error: " + err.Error())
+			}
+		}
+	} else {
+		// if error is due to namespace name collision, retry with suffixed number
+		i := 0
+		for k8serrors.IsAlreadyExists(err) {
+			// it has gitlab-ignored label, so create new namespace with suffix counter
+			i++
+			nsName = nsName + "-" + strconv.Itoa(i)
+			_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
+		}
 
-	// if error is due to namespace name collision, retry with suffixed number
-	// TODO Solve collision with already present namespaces that do not have gitlab-origin, but gitlab-ignored
-	i := 0
-	for k8serrors.IsAlreadyExists(err) {
-		i++
-		nsName = nsName + "-" + strconv.Itoa(i)
-		_, err = getK8sClient().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 	}
 	check(err)
 }

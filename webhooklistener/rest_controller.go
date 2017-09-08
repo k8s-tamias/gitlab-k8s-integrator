@@ -33,6 +33,7 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 		if r.Header.Get("X-Gitlab-Event") != "System Hook" {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		body, err := ioutil.ReadAll(r.Body)
