@@ -105,7 +105,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: gitlab-group-master
+  name: gitlab-project-master
 rules:
 - apiGroups:
    - ""
@@ -133,6 +133,7 @@ rules:
    - persistentvolumes
    - pods/status
    - pods/log
+   - services/proxy
   verbs:
    - get
    - list
@@ -150,6 +151,20 @@ rules:
    - update
    - patch
    - delete
+- apiGroups:
+   - batch
+  resources:
+   - cronjobs
+   - jobs
+  verbs:
+   - create
+   - delete
+   - deletecollection
+   - get
+   - list
+   - patch
+   - update
+   - watch
 - apiGroups:
    - extensions
   resources:
