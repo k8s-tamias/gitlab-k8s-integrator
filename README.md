@@ -1,6 +1,11 @@
 # Kubernetes Gitlab Integrator Service
 
-This service consumes Gitlab Webhook Calls and translates them into namespaces and roles in Kubernetes. 
+[![Go Report Card](https://goreportcard.com/badge/github.com/k8s-tamias/gitlab-k8s-integrator)](https://goreportcard.com/report/github.com/k8s-tamias/gitlab-k8s-integrator)
+[![GoDoc](https://godoc.org/github.com/k8s-tamias/gitlab-k8s-integrator?status.svg)](https://godoc.org/github.com/k8s-tamias/gitlab-k8s-integrator)
+
+This service consumes Gitlab Webhook Calls and translates them into namespaces and roles in Kubernetes. Every Gitlab Group,
+Project and User Repository (Private Namespace) is turned into a namespace on Kubernetes.
+
 Users in Gitlab are then bound to the roles according to their membership in Gitlab. A change has immediate effect to K8s
 due to the use of Gitlab Webhooks. Additionally the Integrator has a recurring job which synchronizes the state of Gitlab
 with Kubernetes to ensure that the two systems do not drift appart due to lost events. In case of a conflict, Gitlab will act as the authorative system.
@@ -24,13 +29,33 @@ a counter will be added to at the end of the namespace name with a "-" as prefix
 - To avoid wrong deletion, a label with `gitlab-origin` is added to each namespace which is used to discover the correct
 namespace when attempting to delete a namespace.
 
+### Webhook Feature
+
+This service provides an endpoint which, if registered with [Gitlab for System Hooks](https://docs.gitlab.com/ee/system_hooks/system_hooks.html), provides support for
+all the push events which refer to the state of Groups, Projects and Users as well as their respective members. So every 
+change in Gitlab will be directly and promptly reflected through this webhook.
+
+Note: Renaming Groups or Projects and transferring projects results in the deletion and recreation of the corresponding namespace
+in Kubernetes. Thus all contents of the original namespace will be deleted as well.
+
+In the case that the service is offline of for some other reason misses a webhook call, a sync mechanism is provided (see below).
+
 ### Sync Feature
 
 In addition to the webhook feature a recurring sync task is being executed every 3 hours, which
 synchronizes Gitlab with the K8s Cluster according to the following algorithm:
 
 1. Delete all Namespaces, which are present in the K8s Cluster, but do not correspond to an entity in Gitlab.
-(This is ensured by using the "gitlab-origin" label, which contains the original name of the entity from gitlab)
+(This is ensured by using the "gitlab-origin" label on each created namespace, which contains the original name of the entity from gitlab).
+This does not touch namespaces unrelated to Gitlab (i.e. that do not match with a Gitlab name after its transformation)
+2. Iterate all Gitlab entities (Users, Groups and Projects) and for each 
+    1. Create namespace, if not present
+    2. Iterate all Members and for each:
+        1. Create a RoleBinding corresponding to the role in Gitlab (see below for details)
+        2. Delete RoleBindings for Members which are no longer present in the Gitlab Entity
+        3. Adjust RoleBindings for Members whose Role has changed
+    3. Create ceph-secret-user in the namespace, if ENV CEPH_USER_KEY has been set
+      
 
 ### CEPH Secret User Features
 In order to allow for all namespaces to access a DefaultStorageClass of type CEPH, this 
