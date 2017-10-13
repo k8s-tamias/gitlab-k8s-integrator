@@ -28,6 +28,8 @@ a counter will be added to at the end of the namespace name with a "-" as prefix
 "foo-bar". A new Gitlab group by the name of "foo.bar" would now become "foo-bar-1".
 - To avoid wrong deletion, a label with `gitlab-origin` is added to each namespace which is used to discover the correct
 namespace when attempting to delete a namespace.
+- If namespace is present by name, but does not have a gitlab-origin label attached AND is not(!) labeled with
+ 'gitlab-ignored' it get's labeled with its origin name.
 
 ### Webhook Feature
 
@@ -55,7 +57,10 @@ This does not touch namespaces unrelated to Gitlab (i.e. that do not match with 
         2. Delete RoleBindings for Members which are no longer present in the Gitlab Entity
         3. Adjust RoleBindings for Members whose Role has changed
     3. Create ceph-secret-user in the namespace, if ENV CEPH_USER_KEY has been set
-      
+
+#### Prevent namespace from being synced
+If you don't want a specific namespace to be synced with gitlab, just add a 'gitlab-ignored' label with an arbitrary value to
+the namespace. The integrator will then not attempt to sync it.      
 
 ### CEPH Secret User Features
 In order to allow for all namespaces to access a DefaultStorageClass of type CEPH, this 
