@@ -108,7 +108,7 @@ func HandleGitlabEvent(body []byte) {
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete RoleBinding for %s in %s as %s", event.UserUsername, event.GroupPath, event.GroupAccess))
 		k8sclient.DeleteGroupRoleBinding(event.UserUsername, event.GroupPath, event.GroupAccess)
 
-	case "user_created":
+	case "user_create":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Create Namespace and RoleBinding for %s in %s as %s", event.UserCreatedUserName, event.UserCreatedUserName, event.ProjectAccess))
 		k8sclient.CreateNamespace(event.UserCreatedUserName)
 		k8sclient.CreateGroupRoleBinding(event.UserCreatedUserName, event.UserCreatedUserName, "Master")
