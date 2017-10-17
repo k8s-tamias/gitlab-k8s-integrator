@@ -36,6 +36,20 @@ type GitlabProject struct {
 	Id					int
 	PathWithNameSpace 	string `json:"path_with_namespace"`
 	Members 		  	[]Member
+	Links				Links `json:"_links"`
+	Namespace			Namespace `json:"namespace"`
+}
+
+type Namespace struct {
+	Id 			int
+	Name		string
+	Path		string
+	Kind		string
+	FullPath 	string
+}
+
+type Links struct {
+	Members string
 }
 
 type GitlabUser struct {
@@ -216,7 +230,7 @@ func (g *GitlabGroup) getMembers() error {
 }
 
 func (p *GitlabProject) getMembers() error {
-	url := getGitlabBaseUrl() + "projects/" + strconv.Itoa(p.Id) + "/members"
+	url := p.Links.Members
 	result, err := performGitlabHTTPRequest(url)
 
 	if check(err) {
@@ -236,6 +250,18 @@ func (p *GitlabProject) getMembers() error {
 	json.Unmarshal(content, &members)
 
 	p.Members = members
+
+	// aggregate with members from parent group(s)
+	if p.Namespace.Kind == "group" {
+		glGroup := GitlabGroup{FullPath: p.Namespace.FullPath, Id: p.Namespace.Id}
+		glGroup.getMembers()
+		// merge with project members
+		for _,gm := range glGroup.Members {
+			if !contains(p.Members, gm){
+				p.Members = append(p.Members, gm)
+			}
+		}
+	}
 
 	if len(p.Members) == 0{
 		log.Println(fmt.Sprintf("WARNING: No Project Members were found for project %s . StatusCode of Request was: %d . This is a potential bug in Gitlab, will continue to sync anyway", p.PathWithNameSpace, result.StatusCode))
@@ -260,6 +286,15 @@ func performGitlabHTTPRequest(url string) (*http.Response, error) {
 	result, err := http.DefaultClient.Do(req)
 	return result, err
 
+}
+
+func contains(s []Member, e Member) bool {
+	for _, a := range s {
+		if a.Id == e.Id {
+			return true
+		}
+	}
+	return false
 }
 
 func check(err error) bool {
