@@ -76,3 +76,8 @@ func TestGetGroupRoleName(t *testing.T) {
 	master_role := GetGroupRoleName("Master")
 	if master_role != "gitlab-group-master" { t.Error(fmt.Sprintf("Expected gitlab-group-master , but was %s", master_role))}
 }
+
+func TestGetProjectRoleName(t *testing.T) {
+	master_role := GetProjectRoleName("Master")
+	if master_role != "gitlab-project-master" { t.Error(fmt.Sprintf("Expected gitlab-project-master , but was %s", master_role))}
+}

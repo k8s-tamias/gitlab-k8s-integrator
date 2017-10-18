@@ -336,7 +336,7 @@ func GetProjectRoleName(accessLevel string) string {
 	rname := ""
 	switch accessLevel {
 	case "Master":
-		rname := os.Getenv("PROJECT_MASTER_ROLENAME")
+		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-master"
 		}
