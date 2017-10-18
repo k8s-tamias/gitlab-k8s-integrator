@@ -341,18 +341,18 @@ func GetProjectRoleName(accessLevel string) string {
 			rname = "gitlab-project-master"
 		}
 	case "Reporter":
-		rname := os.Getenv("PROJECT_REPORTER_ROLENAME")
+		rname = os.Getenv("PROJECT_REPORTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-reporter"
 		}
 	case "Developer":
-		rname := os.Getenv("PROJECT_DEVELOPER_ROLENAME")
+		rname = os.Getenv("PROJECT_DEVELOPER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-developer"
 		}
 
 	default:
-		rname := os.Getenv("PROJECT_DEFAULT_ROLENAME")
+		rname = os.Getenv("PROJECT_DEFAULT_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-guest"
 		}
