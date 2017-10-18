@@ -37,7 +37,7 @@ type GitlabEvent struct {
 	ProjectId            int       `json:"project_id"`
 	ProjectVisibility    string    `json:"project_visibility"`
 	OldPathWithNamespace string    `json:"old_path_with_namespace"`
-	ProjectAccess        string    `json:"project_access"`
+	ProjectAccess        string    `json:"access_level"`
 	GroupAccess          string    `json:"group_access"`
 	UserEmail            string    `json:"user_email"`
 	UserName             string    `json:"user_name"`

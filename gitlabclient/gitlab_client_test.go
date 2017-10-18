@@ -1816,14 +1816,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-30T19:52:55.818+02:00",
     "confirmed_at": "2017-08-30T19:52:55.489+02:00",
     "last_activity_on": "2017-08-30",
-    "email": "etienne.onasch@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-30T19:52:55.818+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abt897,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -1850,14 +1850,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-30T16:00:50.535+02:00",
     "confirmed_at": "2017-08-30T16:00:50.097+02:00",
     "last_activity_on": null,
-    "email": "michel.langhammer@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-30T16:00:50.535+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acf462,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -1891,7 +1891,7 @@ func TestGetAllUsers(t *testing.T) {
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abz826,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -1925,7 +1925,7 @@ func TestGetAllUsers(t *testing.T) {
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=k8s400,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -1952,14 +1952,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-23T21:51:13.889+02:00",
     "confirmed_at": "2017-08-23T21:51:13.782+02:00",
     "last_activity_on": null,
-    "email": "andreas.titar@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-23T21:51:13.889+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abv898,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -1986,14 +1986,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-23T21:50:34.094+02:00",
     "confirmed_at": "2017-08-23T21:50:33.980+02:00",
     "last_activity_on": null,
-    "email": "daniel.galvan@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-23T21:50:34.094+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acb980,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2020,14 +2020,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-22T21:39:43.064+02:00",
     "confirmed_at": "2017-08-22T21:39:42.490+02:00",
     "last_activity_on": null,
-    "email": "frederik.felix@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-22T21:39:43.064+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acc412,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2054,14 +2054,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-21T23:21:03.113+02:00",
     "confirmed_at": "2017-08-21T23:21:02.697+02:00",
     "last_activity_on": null,
-    "email": "ronaldsafowat.kattan@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-22T09:56:59.416+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abf159,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2088,14 +2088,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-16T20:43:43.044+02:00",
     "confirmed_at": "2017-08-16T20:43:42.123+02:00",
     "last_activity_on": null,
-    "email": "milan.mertens@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-16T20:43:43.044+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acj141,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2122,14 +2122,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-15T20:26:51.792+02:00",
     "confirmed_at": "2017-08-15T20:26:51.704+02:00",
     "last_activity_on": null,
-    "email": "jonas.fuhrmann@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-15T20:26:51.792+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abz908,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2156,14 +2156,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-28T10:06:33.104+02:00",
     "confirmed_at": "2017-08-15T19:35:35.856+02:00",
     "last_activity_on": "2017-08-28",
-    "email": "gerhard.wagner@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-09-05T12:25:14.391+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abq335,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2190,14 +2190,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-21T23:33:57.117+02:00",
     "confirmed_at": "2017-08-15T17:11:01.922+02:00",
     "last_activity_on": "2017-08-22",
-    "email": "olf.deusen@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 5,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-22T12:42:17.235+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abf617,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2224,14 +2224,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-15T12:27:09.632+02:00",
     "confirmed_at": "2017-08-15T12:27:09.350+02:00",
     "last_activity_on": null,
-    "email": "frank.kindler@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-15T12:27:09.632+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acj102,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2258,14 +2258,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-11T21:11:31.165+02:00",
     "confirmed_at": "2017-08-11T21:11:30.745+02:00",
     "last_activity_on": null,
-    "email": "micha.rosenbaum@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-11T21:11:31.165+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=aci959,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2292,14 +2292,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-10T09:19:44.828+02:00",
     "confirmed_at": "2017-08-10T09:19:44.754+02:00",
     "last_activity_on": null,
-    "email": "thekiet.dang@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-10T09:19:44.828+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=ach146,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2326,14 +2326,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-09T19:57:00.553+02:00",
     "confirmed_at": "2017-08-09T19:57:00.486+02:00",
     "last_activity_on": null,
-    "email": "stephan.phieler@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-09T19:57:00.553+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=aav300,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2360,14 +2360,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-09T19:35:13.863+02:00",
     "confirmed_at": "2017-08-09T19:35:13.531+02:00",
     "last_activity_on": null,
-    "email": "david.olszowka@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-09T19:35:13.863+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abd260,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2394,14 +2394,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-09T16:17:06.610+02:00",
     "confirmed_at": "2017-08-09T16:17:06.192+02:00",
     "last_activity_on": null,
-    "email": "shekhmos.hussin@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-09T16:17:06.610+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=aci829,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2428,14 +2428,14 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-09T14:39:34.756+02:00",
     "confirmed_at": "2017-08-09T14:39:34.683+02:00",
     "last_activity_on": null,
-    "email": "steven.illg@haw-hamburg.de",
+    "email": "max.mustermann@test-gl-k8s.com",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-09T14:39:34.756+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=abr561,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
@@ -2462,14 +2462,13 @@ func TestGetAllUsers(t *testing.T) {
     "last_sign_in_at": "2017-08-09T14:13:22.470+02:00",
     "confirmed_at": "2017-08-09T14:13:22.386+02:00",
     "last_activity_on": null,
-    "email": "karl.andrae@haw-hamburg.de",
     "color_scheme_id": 1,
     "projects_limit": 10,
     "current_sign_in_at": "2017-08-09T14:13:22.470+02:00",
     "identities": [
       {
         "provider": "ldapmain",
-        "extern_uid": "uid=acc166,ou=Users,ou=dep-inf,o=haw-hamburg"
+        "extern_uid": "uid=123xyc,ou=Users,ou=dept,o=test-company"
       }
     ],
     "can_create_group": true,
