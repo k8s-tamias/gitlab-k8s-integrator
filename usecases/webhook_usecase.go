@@ -21,6 +21,7 @@ import (
 	"time"
 	"log"
 	"fmt"
+	"os"
 )
 
 type GitlabEvent struct {
@@ -49,6 +50,11 @@ type GitlabEvent struct {
 }
 
 func HandleGitlabEvent(body []byte) {
+
+	if os.Getenv("ENABLE_GITLAB_HOOKS_DEBUG") == "true" {
+		rawMsg := string(body[:])
+		log.Println("DEBUG: Raw Hook Contents Received= %s", rawMsg)
+	}
 
 	var event GitlabEvent
 	err := json.Unmarshal(body, &event)
