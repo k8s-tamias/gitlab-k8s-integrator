@@ -20,7 +20,7 @@ before_script:
 
 buildAndTest:
   stage: test
-  image: nexus.informatik.haw-hamburg.de/golang:1.9
+  image: nexus.informatik.haw-hamburg.de/golang:1.9.1
   variables:
     CGO_ENABLED: "0"
     GOOS: "linux"
