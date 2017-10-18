@@ -21,6 +21,7 @@ import (
 	"time"
 	"log"
 	"fmt"
+	"os"
 )
 
 type GitlabEvent struct {
@@ -36,7 +37,7 @@ type GitlabEvent struct {
 	ProjectId            int       `json:"project_id"`
 	ProjectVisibility    string    `json:"project_visibility"`
 	OldPathWithNamespace string    `json:"old_path_with_namespace"`
-	ProjectAccess        string    `json:"project_access"`
+	ProjectAccess        string    `json:"access_level"`
 	GroupAccess          string    `json:"group_access"`
 	UserEmail            string    `json:"user_email"`
 	UserName             string    `json:"user_name"`
@@ -49,6 +50,11 @@ type GitlabEvent struct {
 }
 
 func HandleGitlabEvent(body []byte) {
+
+	if os.Getenv("ENABLE_GITLAB_HOOKS_DEBUG") == "true" {
+		rawMsg := string(body[:])
+		log.Println("DEBUG: Raw Hook Contents Received= %s", rawMsg)
+	}
 
 	var event GitlabEvent
 	err := json.Unmarshal(body, &event)
