@@ -142,7 +142,7 @@ func DeleteProjectRoleBinding(username, path, accessLevel string) {
 func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string){
 	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
 	if check(err) {
-		log.Fatal("Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
+		log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
 	}
 }
 
@@ -180,7 +180,7 @@ func DeleteGroupRoleBinding(username, path, accessLevel string) {
 func DeleteGroupRoleBindingByName(roleBindingName, actualNamespace string){
 	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
 	if check(err) {
-		log.Fatal("Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
+		log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
 	}
 }
 
