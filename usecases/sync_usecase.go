@@ -182,7 +182,7 @@ func PerformGlK8sSync() {
 			expectedRoleBindings := map[string]bool{}
 			for _, member := range project.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
-				roleName := k8sclient.GetGroupRoleName(accessLevel)
+				roleName := k8sclient.GetProjectRoleName(accessLevel)
 				rbName := k8sclient.ConstructRoleBindingName(member.Username, roleName, actualNamespace)
 				expectedRoleBindings[rbName] = true
 
