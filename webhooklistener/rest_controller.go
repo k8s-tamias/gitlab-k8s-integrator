@@ -29,6 +29,7 @@ func Listen(quit chan int) {
 	router.HandleFunc("/healthz", handleHealthz)
 	router.HandleFunc("/", handleGitlabWebhook)
 	if enableSyncEndpoint := os.Getenv("ENABLE_SYNC_ENDPOINT"); enableSyncEndpoint == "true" {
+		log.Println("WARNING: Sync Endpoint enabled")
 		router.HandleFunc("/sync", handleSync)
 	}
 

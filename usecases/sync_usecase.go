@@ -55,13 +55,14 @@ Algo:
 
 func PerformGlK8sSync() {
 	log.Println("Starting new Synchronization run!")
+	log.Println("Getting Gitlab Contents...")
 	gitlabContent, err := gitlabclient.GetFullGitlabContent()
 	if check(err) {
 		return
 	}
 
 	// 1. delete all Namespaces which are not in the gitlab set
-	log.Println("Getting Gitlab Contents...")
+	log.Println("Getting K8s Contents...")
 	gitlabNamespacesInK8s := k8sclient.GetAllGitlabOriginNamesFromNamespacesWithOriginLabel()
 
 	log.Println("Deleting all namespaces which are no longer in the gitlab namespace...")
