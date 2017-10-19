@@ -37,6 +37,8 @@ This service provides an endpoint which, if registered with [Gitlab for System H
 all the push events which refer to the state of Groups, Projects and Users as well as their respective members. So every 
 change in Gitlab will be directly and promptly reflected through this webhook.
 
+The endpoint is: **/hook**
+
 Note: Renaming Groups or Projects and transferring projects results in the deletion and recreation of the corresponding namespace
 in Kubernetes. Thus all contents of the original namespace will be deleted as well.
 
