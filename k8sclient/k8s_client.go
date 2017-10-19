@@ -160,6 +160,7 @@ func CreateGroupRoleBinding(username, path, accessLevel string) {
 	if check(err) {
 		log.Fatal("Communication with K8s Server threw error, while creating RoleBinding. Err: " + err.Error())
 	}
+	log.Println(fmt.Sprintf("INFO: Created GroupRoleBinding for user %s as %s in namespace %s", username, rolename, ns))
 }
 
 func DeleteGroupRoleBinding(username, path, accessLevel string) {
