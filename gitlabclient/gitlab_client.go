@@ -230,7 +230,7 @@ func (g *GitlabGroup) getMembers() error {
 }
 
 func (p *GitlabProject) getMembers() error {
-	url := p.Links.Members
+	url := getGitlabBaseUrl() + "projects/" + strconv.Itoa(p.Id) + "/members"
 	result, err := performGitlabHTTPRequest(url)
 
 	if check(err) {
