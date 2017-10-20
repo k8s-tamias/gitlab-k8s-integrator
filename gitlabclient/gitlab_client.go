@@ -108,12 +108,13 @@ func GetAllGroups(gitlabGroups []GitlabGroup, url string) ([]GitlabGroup, error)
 		return nil, err
 	}
 
-	for _, group := range groups {
-		err := group.getMembers()
+	for i := range groups {
+		err := groups[i].getMembers()
 		check(err)
 	}
 
-	gitlabGroups = append(groups, gitlabGroups...)
+	// DEEP APPEND here
+	gitlabGroups = append(gitlabGroups, groups...)
 
 	group := link.ParseHeader(result.Header)
 	next := group["next"]
@@ -146,8 +147,8 @@ func GetAllProjects(gitlabProjects []GitlabProject, url string) ([]GitlabProject
 		return nil, err
 	}
 
-	for _, project := range projects {
-		err := project.getMembers()
+	for i := range projects {
+		err := projects[i].getMembers()
 		check(err)
 	}
 
