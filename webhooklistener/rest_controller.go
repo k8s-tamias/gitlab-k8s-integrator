@@ -33,7 +33,6 @@ func Listen(quit chan int) {
 	}
 	router.HandleFunc("/hook", handleGitlabWebhook)
 
-
 	log.Fatal(http.ListenAndServe(":8080", router))
 	quit <- 0
 }

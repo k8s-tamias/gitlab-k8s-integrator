@@ -19,8 +19,8 @@ import (
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabclient"
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
 	"log"
-	"time"
 	"os"
+	"time"
 )
 
 /*

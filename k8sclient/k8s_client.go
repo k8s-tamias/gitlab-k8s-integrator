@@ -16,9 +16,11 @@
 package k8sclient
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
@@ -28,8 +30,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func CreateNamespace(name string) {
@@ -51,7 +51,7 @@ func CreateNamespace(name string) {
 		if check(errGetNs) {
 			log.Fatal("Error while retrieving namespace. Error: " + errGetNs.Error())
 		}
-		if ns.Labels["gitlab-ignored"] == ""{
+		if ns.Labels["gitlab-ignored"] == "" {
 			// add label to already present namespace
 			patchContent := fmt.Sprintf(`{"metadata":{"labels":{"gitlab-origin":"%s"}}}`, labelName)
 			patchByteArray := []byte(patchContent)
@@ -77,7 +77,7 @@ func CreateNamespace(name string) {
 	check(err)
 }
 
-func DeployCEPHSecretUser(namespace string){
+func DeployCEPHSecretUser(namespace string) {
 	if userKey := os.Getenv("CEPH_USER_KEY"); userKey != "" {
 		client := getK8sClient()
 		_, err := client.CoreV1().Secrets(namespace).Create(&v1.Secret{
@@ -86,7 +86,7 @@ func DeployCEPHSecretUser(namespace string){
 				APIVersion: "v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "ceph-secret-user",
+				Name:      "ceph-secret-user",
 				Namespace: namespace,
 			},
 			Data: map[string][]byte{"key": []byte(userKey)},
@@ -111,7 +111,6 @@ func DeleteNamespace(originalName string) {
 
 func CreateProjectRoleBinding(username, path, accessLevel string) {
 	ns := GetActualNameSpaceNameByGitlabName(path)
-
 
 	rolename := GetProjectRoleName(accessLevel)
 
@@ -139,7 +138,7 @@ func DeleteProjectRoleBinding(username, path, accessLevel string) {
 	}
 }
 
-func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string){
+func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string) {
 	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
 	if check(err) {
 		log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
@@ -148,7 +147,6 @@ func DeleteProjectRoleBindingByName(roleBindingName, actualNamespace string){
 
 func CreateGroupRoleBinding(username, path, accessLevel string) {
 	ns := GetActualNameSpaceNameByGitlabName(path)
-
 
 	rolename := GetGroupRoleName(accessLevel)
 
@@ -178,7 +176,7 @@ func DeleteGroupRoleBinding(username, path, accessLevel string) {
 	}
 }
 
-func DeleteGroupRoleBindingByName(roleBindingName, actualNamespace string){
+func DeleteGroupRoleBindingByName(roleBindingName, actualNamespace string) {
 	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
 	if check(err) {
 		log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
@@ -197,7 +195,7 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 		if labelName := v.Labels["gitlab-origin"]; labelName != "" {
 			gitlabName, err := K8sLabelToGitlabName(labelName)
 			if check(err) {
-				log.Fatal("Error while transforming labelName back to Gitlab Name. Err: "+ err.Error())
+				log.Fatal("Error while transforming labelName back to Gitlab Name. Err: " + err.Error())
 			}
 			vsf = append(vsf, gitlabName)
 		}
@@ -233,9 +231,9 @@ func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 
 /// GetRoleBindingsByNamespace retrieves the rolebindings present in K8s for the provided namespace
 /// the namespace parameter is assumed to be the real namespace name in k8s!
-func GetRoleBindingsByNamespace(namespace string) map[string]bool{
+func GetRoleBindingsByNamespace(namespace string) map[string]bool {
 	rbs, err := getK8sClient().RbacV1beta1().RoleBindings(namespace).List(metav1.ListOptions{})
-	if check(err){
+	if check(err) {
 		log.Fatal(fmt.Sprintf("Error while retrieving rolebindings for namespace %s. Error: %s", namespace, err))
 	}
 	res := map[string]bool{}
@@ -280,14 +278,14 @@ func GitlabNameToK8sNamespace(givenName string) (string, error) {
 	return nsName, nil
 }
 
-func GitlabNameToK8sLabel(givenName string) (string, error){
+func GitlabNameToK8sLabel(givenName string) (string, error) {
 	/*
-	Rules:
-	1) “.” -> “.”
-	2) “-” -> “-”
-	3) “_” -> “__”
-	4) “/” -> “_”
- 	*/
+		Rules:
+		1) “.” -> “.”
+		2) “-” -> “-”
+		3) “_” -> “__”
+		4) “/” -> “_”
+	*/
 	replacer := strings.NewReplacer("_", "__",
 		"/", "_")
 
@@ -306,14 +304,14 @@ func GitlabNameToK8sLabel(givenName string) (string, error){
 	return labelName, nil
 }
 
-func K8sLabelToGitlabName(givenName string) (string, error){
+func K8sLabelToGitlabName(givenName string) (string, error) {
 	/*
-	Rules:
-	1) “.” <- “.”
-	2) “-” <- “-”
-	3) “_” <- “__”
-	4) “/” <- “_”
-	 */
+		Rules:
+		1) “.” <- “.”
+		2) “-” <- “-”
+		3) “_” <- “__”
+		4) “/” <- “_”
+	*/
 	// Path can contain only letters, digits, '_', '-' and '.'. Cannot start with '-' or end in '.', '.git' or '.atom'.
 	replacer := strings.NewReplacer("__", "_",
 		"_", "/")

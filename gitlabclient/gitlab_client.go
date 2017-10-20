@@ -27,25 +27,25 @@ import (
 )
 
 type GitlabGroup struct {
-	Id			int
-	FullPath 	string `json:"full_path"`
-	Members  	[]Member
+	Id       int
+	FullPath string `json:"full_path"`
+	Members  []Member
 }
 
 type GitlabProject struct {
-	Id					int
-	PathWithNameSpace 	string `json:"path_with_namespace"`
-	Members 		  	[]Member
-	Links				Links `json:"_links"`
-	Namespace			Namespace `json:"namespace"`
+	Id                int
+	PathWithNameSpace string `json:"path_with_namespace"`
+	Members           []Member
+	Links             Links     `json:"_links"`
+	Namespace         Namespace `json:"namespace"`
 }
 
 type Namespace struct {
-	Id 			int
-	Name		string
-	Path		string
-	Kind		string
-	FullPath 	string
+	Id       int
+	Name     string
+	Path     string
+	Kind     string
+	FullPath string
 }
 
 type Links struct {
@@ -57,11 +57,11 @@ type GitlabUser struct {
 }
 
 type Member struct {
-	Id			int 	`json:"id"`
-	Username 	string 	`json:"username"`
-	Name		string 	`json:"name"`
-	State		string 	`json:"state"`
-	AccessLevel	int		`json:"access_level"`
+	Id          int    `json:"id"`
+	Username    string `json:"username"`
+	Name        string `json:"name"`
+	State       string `json:"state"`
+	AccessLevel int    `json:"access_level"`
 }
 
 type GitlabContent struct {
@@ -179,7 +179,7 @@ func GetAllUsers(gitlabUsers []GitlabUser, url string) ([]GitlabUser, error) {
 	Users := make([]GitlabUser, 0)
 
 	err = json.Unmarshal(content, &Users)
-	if check(err){
+	if check(err) {
 		return nil, err
 	}
 
@@ -223,21 +223,21 @@ func (g *GitlabGroup) getMembers() error {
 	if result.StatusCode == 401 {
 		return errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
 	}
-	if result.StatusCode == 404{
+	if result.StatusCode == 404 {
 		return errors.New("The requested URL was invalid! Stopping now.")
 	}
 
 	content, err := ioutil.ReadAll(result.Body)
 
-	members := make([]Member,0)
+	members := make([]Member, 0)
 	err = json.Unmarshal(content, &members)
 
-	if check(err){
+	if check(err) {
 		return err
 	}
 
 	g.Members = members
-	if len(g.Members) == 0{
+	if len(g.Members) == 0 {
 		log.Println(fmt.Sprintf("WARNING: No Group Members were found for group %s . StatusCode of Request was: %d . This is a potential bug in Gitlab, will continue to sync anyway", g.FullPath, result.StatusCode))
 	}
 	return nil
@@ -254,15 +254,15 @@ func (p *GitlabProject) getMembers() error {
 	if result.StatusCode == 401 {
 		return errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
 	}
-	if result.StatusCode == 404{
-		return errors.New("The requested URL was invalid! Stopping now. Url was: "+ url)
+	if result.StatusCode == 404 {
+		return errors.New("The requested URL was invalid! Stopping now. Url was: " + url)
 	}
 
 	content, err := ioutil.ReadAll(result.Body)
 
-	members := make([]Member,0)
+	members := make([]Member, 0)
 	err = json.Unmarshal(content, &members)
-	if check(err){
+	if check(err) {
 		return err
 	}
 
@@ -272,18 +272,18 @@ func (p *GitlabProject) getMembers() error {
 	if p.Namespace.Kind == "group" {
 		glGroup := GitlabGroup{FullPath: p.Namespace.FullPath, Id: p.Namespace.Id}
 		err := glGroup.getMembers()
-		if check(err){
+		if check(err) {
 			return err
 		}
 		// merge with project members
-		for _,gm := range glGroup.Members {
-			if !contains(p.Members, gm){
+		for _, gm := range glGroup.Members {
+			if !contains(p.Members, gm) {
 				p.Members = append(p.Members, gm)
 			}
 		}
 	}
 
-	if len(p.Members) == 0{
+	if len(p.Members) == 0 {
 		log.Println(fmt.Sprintf("WARNING: No Project Members were found for project %s . StatusCode of Request was: %d . This is a potential bug in Gitlab, will continue to sync anyway", p.PathWithNameSpace, result.StatusCode))
 	}
 
@@ -292,7 +292,9 @@ func (p *GitlabProject) getMembers() error {
 
 func getGitlabBaseUrl() string {
 	apiVersion := os.Getenv("GITLAB_API_VERSION")
-	if apiVersion == "" { apiVersion = "v4" }
+	if apiVersion == "" {
+		apiVersion = "v4"
+	}
 	return fmt.Sprintf("https://%s/api/%s/", os.Getenv("GITLAB_HOSTNAME"), apiVersion)
 }
 

@@ -13,7 +13,6 @@
 	limitations under the License.
 */
 
-
 package gitlabclient
 
 import (
@@ -23,12 +22,12 @@ import (
 	"testing"
 )
 
-func TestGetFullContent(t *testing.T) {
+/*func TestGetFullContent(t *testing.T) {
 	_, err := GetFullGitlabContent()
 	if err != nil {
 		t.Error(err)
 	}
-}
+}*/
 
 func TestGetAllGroups(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
