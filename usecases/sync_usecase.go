@@ -20,6 +20,7 @@ import (
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
 	"log"
 	"time"
+	"os"
 )
 
 /*
@@ -76,7 +77,7 @@ func PerformGlK8sSync() {
 			}
 		}
 
-		if delete == true {
+		if delete {
 			for _, project := range gitlabContent.Projects {
 				if originalName == project.PathWithNameSpace {
 					delete = false
@@ -85,7 +86,7 @@ func PerformGlK8sSync() {
 			}
 		}
 
-		if delete == true {
+		if delete {
 			for _, group := range gitlabContent.Groups {
 				if originalName == group.FullPath {
 					delete = false
@@ -104,10 +105,12 @@ func PerformGlK8sSync() {
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
 		if actualNamespace != "" {
+
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
+			roleName := k8sclient.GetGroupRoleName("Master")
+			expectedGitlabRolebindingName := k8sclient.ConstructRoleBindingName(user.Username, roleName, actualNamespace)
 
-			expectedGitlabRolebindingName := k8sclient.ConstructRoleBindingName(user.Username, k8sclient.GetGroupRoleName("Master"), actualNamespace)
 			// 2.1 Iterate all roleBindings
 			for rb := range k8sRoleBindings {
 				if rb != expectedGitlabRolebindingName {
@@ -132,21 +135,40 @@ func PerformGlK8sSync() {
 	log.Println("Syncing Gitlab Groups...")
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
+		if debugSync() {
+			log.Println("Syncing: " + group.FullPath)
+		}
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(group.FullPath)
+		if debugSync() {
+			log.Println("ActualNamespace: " + actualNamespace)
+		}
 		if actualNamespace != "" {
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
+			if debugSync() {
+				log.Printf("Found %d rolebindings \n", len(k8sRoleBindings))
+			}
 
 			// get expectedRoleBindings by retrieved Members
 			expectedRoleBindings := map[string]bool{}
 			for _, member := range group.Members {
+				if debugSync() {
+					log.Println("Processing member " + member.Name)
+				}
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				roleName := k8sclient.GetGroupRoleName(accessLevel)
 				rbName := k8sclient.ConstructRoleBindingName(member.Username, roleName, actualNamespace)
 				expectedRoleBindings[rbName] = true
 
-				// make sure the project's expected rolebindings are present
+				if debugSync() {
+					log.Printf("AccessLevel: %s, roleName: %s, rbName: %s", accessLevel, roleName, rbName)
+				}
+
+				// make sure the groups's expected rolebindings are present
 				if !k8sRoleBindings[rbName] {
+					if debugSync() {
+						log.Println("Creating RoleBinding " + rbName)
+					}
 					k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
 				}
 			}
@@ -154,6 +176,9 @@ func PerformGlK8sSync() {
 			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
 			for rb := range k8sRoleBindings {
 				if !expectedRoleBindings[rb] {
+					if debugSync() {
+						log.Println("Deleting RoleBinding " + rb)
+					}
 					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
 				}
 			}
@@ -163,6 +188,9 @@ func PerformGlK8sSync() {
 		} else {
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(group.FullPath)
+			if debugSync() {
+				log.Println("Creating Namespace for " + group.FullPath)
+			}
 			for _, member := range group.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
@@ -222,4 +250,8 @@ func StartRecurringSyncTimer() {
 			go PerformGlK8sSync()
 		}
 	}()
+}
+
+func debugSync() bool {
+	return os.Getenv("ENABLE_GITLAB_SYNC_DEBUG") == "true"
 }

@@ -97,13 +97,16 @@ func GetAllGroups(gitlabGroups []GitlabGroup, url string) ([]GitlabGroup, error)
 		return nil, err
 	}
 	if result.StatusCode == 401 {
-		return nil, errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now.")
+		return nil, errors.New("GITLAB_PRIVATE_TOKEN was not set or wrong. Stopping now")
 	}
 	content, err := ioutil.ReadAll(result.Body)
 
 	groups := make([]GitlabGroup, 0)
 
-	json.Unmarshal(content, &groups)
+	err = json.Unmarshal(content, &groups)
+	if check(err) {
+		return nil, err
+	}
 
 	for _, group := range groups {
 		err := group.getMembers()
@@ -137,7 +140,11 @@ func GetAllProjects(gitlabProjects []GitlabProject, url string) ([]GitlabProject
 
 	projects := make([]GitlabProject, 0)
 
-	json.Unmarshal(content, &projects)
+	err = json.Unmarshal(content, &projects)
+
+	if check(err) {
+		return nil, err
+	}
 
 	for _, project := range projects {
 		err := project.getMembers()
@@ -171,7 +178,10 @@ func GetAllUsers(gitlabUsers []GitlabUser, url string) ([]GitlabUser, error) {
 
 	Users := make([]GitlabUser, 0)
 
-	json.Unmarshal(content, &Users)
+	err = json.Unmarshal(content, &Users)
+	if check(err){
+		return nil, err
+	}
 
 	gitlabUsers = append(Users, gitlabUsers...)
 
@@ -220,7 +230,11 @@ func (g *GitlabGroup) getMembers() error {
 	content, err := ioutil.ReadAll(result.Body)
 
 	members := make([]Member,0)
-	json.Unmarshal(content, &members)
+	err = json.Unmarshal(content, &members)
+
+	if check(err){
+		return err
+	}
 
 	g.Members = members
 	if len(g.Members) == 0{
@@ -247,14 +261,20 @@ func (p *GitlabProject) getMembers() error {
 	content, err := ioutil.ReadAll(result.Body)
 
 	members := make([]Member,0)
-	json.Unmarshal(content, &members)
+	err = json.Unmarshal(content, &members)
+	if check(err){
+		return err
+	}
 
 	p.Members = members
 
 	// aggregate with members from parent group(s)
 	if p.Namespace.Kind == "group" {
 		glGroup := GitlabGroup{FullPath: p.Namespace.FullPath, Id: p.Namespace.Id}
-		glGroup.getMembers()
+		err := glGroup.getMembers()
+		if check(err){
+			return err
+		}
 		// merge with project members
 		for _,gm := range glGroup.Members {
 			if !contains(p.Members, gm){

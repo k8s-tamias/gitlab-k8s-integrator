@@ -1,5 +1,5 @@
 stages:
-  - build
+  - lint
   - test
   - dockerize
 

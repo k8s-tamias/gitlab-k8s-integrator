@@ -73,11 +73,11 @@ func TestK8sLabelToGitlabName(t *testing.T) {
 }
 
 func TestGetGroupRoleName(t *testing.T) {
-	master_role := GetGroupRoleName("Master")
-	if master_role != "gitlab-group-master" { t.Error(fmt.Sprintf("Expected gitlab-group-master , but was %s", master_role))}
+	masterRole := GetGroupRoleName("Master")
+	if masterRole != "gitlab-group-master" { t.Error(fmt.Sprintf("Expected gitlab-group-master , but was %s", masterRole))}
 }
 
 func TestGetProjectRoleName(t *testing.T) {
-	master_role := GetProjectRoleName("Master")
-	if master_role != "gitlab-project-master" { t.Error(fmt.Sprintf("Expected gitlab-project-master , but was %s", master_role))}
+	masterRole := GetProjectRoleName("Master")
+	if masterRole != "gitlab-project-master" { t.Error(fmt.Sprintf("Expected gitlab-project-master , but was %s", masterRole))}
 }

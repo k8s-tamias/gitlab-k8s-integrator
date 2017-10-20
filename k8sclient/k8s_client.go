@@ -47,17 +47,17 @@ func CreateNamespace(name string) {
 
 	// if the already present namespace does not have "gitlab-ignored" label, we will update it with a  gitlab-origin label
 	if k8serrors.IsAlreadyExists(err) {
-		ns, err := getK8sClient().Namespaces().Get(nsName, metav1.GetOptions{})
-		if check(err) {
-			log.Fatal("Error while retrieving namespace. Error: " + err.Error())
+		ns, errGetNs := getK8sClient().Namespaces().Get(nsName, metav1.GetOptions{})
+		if check(errGetNs) {
+			log.Fatal("Error while retrieving namespace. Error: " + errGetNs.Error())
 		}
 		if ns.Labels["gitlab-ignored"] == ""{
 			// add label to already present namespace
 			patchContent := fmt.Sprintf(`{"metadata":{"labels":{"gitlab-origin":"%s"}}}`, labelName)
 			patchByteArray := []byte(patchContent)
-			_, err := client.Namespaces().Patch(nsName, types.MergePatchType, patchByteArray)
-			if check(err) {
-				log.Fatal("Error while Updating namespace. Error: " + err.Error())
+			_, errPatch := client.Namespaces().Patch(nsName, types.MergePatchType, patchByteArray)
+			if check(errPatch) {
+				log.Fatal("Error while Updating namespace. Error: " + errPatch.Error())
 			}
 		}
 	} else {
@@ -334,7 +334,7 @@ func K8sLabelToGitlabName(givenName string) (string, error){
 }
 
 func GetProjectRoleName(accessLevel string) string {
-	rname := ""
+	var rname string
 	switch accessLevel {
 	case "Master":
 		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
@@ -362,7 +362,7 @@ func GetProjectRoleName(accessLevel string) string {
 }
 
 func GetGroupRoleName(accessLevel string) string {
-	rname := ""
+	var rname string
 	switch accessLevel {
 	case "Master":
 		rname = os.Getenv("GROUP_MASTER_ROLENAME")

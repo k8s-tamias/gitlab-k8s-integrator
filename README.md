@@ -79,7 +79,7 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |CEPH_USER_KEY| no | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no
-
+|ENABLE_GITLAB_SYNC_DEBUG| no| If set to 'true' the sync process will output debug info
 ### Roles and Permissions
 
 We came up with a default for Roles and Persmissions as follows:
