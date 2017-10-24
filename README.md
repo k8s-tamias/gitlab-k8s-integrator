@@ -117,19 +117,35 @@ So User "foo" with Role "Master" in Group "bar" would become `foo-gitlab-group-m
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: gitlab-group-reporter
+  name: gitlab-group-developer
 rules:
 - apiGroups:
    - ""
   resources:
    - events
-   - persistentvolumes
+   - persistentvolumeclaims
+   - pods
    - pods/status
-   - pods/log
+   - pods/logs
+   - services
+   - services/proxy
   verbs:
    - get
    - list
    - watch
+- apiGroups:
+   - ""
+  resources:
+   - pods/portforward
+   - pods/exec
+  verbs:
+   - get
+   - watch
+   - list
+   - create
+   - update
+   - patch
+   - delete
 ```
 
 #### Recommended Master Role<a name="masterrole"></a>
@@ -144,12 +160,14 @@ rules:
   resources:
    - configmaps
    - pods
+   - pods/logs
    - pods/attach
    - pods/exec
    - pods/portforward
    - persistentvolumeclaims
    - secrets
    - services
+   - services/proxy
   verbs:
    - get
    - watch
@@ -165,7 +183,7 @@ rules:
    - persistentvolumes
    - pods/status
    - pods/log
-   - services/proxy
+   - pods/proxy
   verbs:
    - get
    - list
