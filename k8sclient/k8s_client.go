@@ -77,7 +77,7 @@ func CreateNamespace(name string) {
 			_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 		}
 	}
-
+	log.Println(fmt.Sprintf("Succesfully created Namespace %s for Gitlab Ressource %s",nsName, name))
 	// finally deploy CEPH Secret User if specified via ENV var
 	DeployCEPHSecretUser(nsName)
 
