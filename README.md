@@ -64,6 +64,161 @@ This does not touch namespaces unrelated to Gitlab (i.e. that do not match with 
 If you don't want a specific namespace to be synced with gitlab, just add a 'gitlab-ignored' label with an arbitrary value to
 the namespace. The integrator will then not attempt to sync it.      
 
+#### Add custom roles and bindings
+Sometimes additional roles and bindings beyond those defined for the gitlab cluster roles are required (i.e. a ServiceAccount 
+with elevated permissions for some special project in a certain namespace). If you keep the sync feature of this 
+service enabled for the namespace you want to have custom roles and bindings in, these will be deleted upon every sync run
+as they are seen as invalid since they are not present in Gitlab by any means.
+
+Therefore, if you want to add custom roles and bindings you may add them as a ConfigMap object to your cluster and mount 
+that object into the /etc/custom-roles folder of the Pod running the Gitlab-K8s-Integrator.
+
+The ConfigMap must contain at least one key which is a valid YAML file. It may contain as many files as you like. This should help
+to structure things. Example:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-roles-and-bindings
+  namespace: integration
+  labels:
+    service: gl-k8s-integrator
+data:
+  nodeAdminRBAC.yaml: |-
+   kind: ClusterRole
+   apiVersion: rbac.authorization.k8s.io/v1beta1
+   metadata:
+     name: nodes-reader
+   rules:
+   - apiGroups:
+     - ""
+     resources:
+      - nodes
+      - events
+     verbs:
+      - get
+      - list
+      - watch
+   ---
+   # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+   kind: ClusterRoleBinding
+   apiVersion: rbac.authorization.k8s.io/v1beta1
+   metadata:
+     name: bob-read-nodes-global
+   subjects:
+   - kind: User
+     name: bob
+     apiGroup: rbac.authorization.k8s.io
+   roleRef:
+     kind: ClusterRole
+     name: nodes-reader
+     apiGroup: rbac.authorization.k8s.io
+   ---
+   # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+   kind: ClusterRoleBinding
+   apiVersion: rbac.authorization.k8s.io/v1beta1
+   metadata:
+     name: john-read-nodes-global
+   subjects:
+   - kind: User
+     name: john
+     apiGroup: rbac.authorization.k8s.io
+   roleRef:
+     kind: ClusterRole
+     name: nodes-reader
+     apiGroup: rbac.authorization.k8s.io
+  loggingAdminRBAC.yaml: |-
+   kind: Role
+   apiVersion: rbac.authorization.k8s.io/v1beta1
+   metadata:
+     namespace: logging
+     name: logging-admin
+   rules:
+   - apiGroups:
+      - "*"
+     resources:
+      - "*"
+     verbs:
+      - "*"
+   ---
+   # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+   kind: RoleBinding
+   apiVersion: rbac.authorization.k8s.io/v1beta1
+   metadata:
+     name: bob-logging-admin-role
+     namespace: logging
+   subjects:
+   - kind: User
+     name: bob
+     apiGroup: rbac.authorization.k8s.io
+   roleRef:
+     kind: Role
+     name: logging-admin
+     apiGroup: rbac.authorization.k8s.io
+```
+
+Then mount it like so:
+
+```yaml
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: gl-k8s-integrator
+  namespace: integration
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: gl-k8s-integrator
+    spec:
+      serviceAccount: gl-k8s-integrator
+      volumes:
+        - name: custom-roles
+          configMap:
+            name: custom-roles-and-bindings
+      containers:
+      - name: gl-k8s-integrator
+        image: my-gl-k8s-image:stable
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: custom-roles-and-bindings
+          mountPath: /etc/custom-roles
+        resources:
+          requests:
+            cpu: 250m
+            memory: 250Mi
+        env:
+        - name: ENABLE_GITLAB_HOOKS_DEBUG
+          value: "false"
+        - name: ENABLE_GITLAB_SYNC_DEBUG
+          value: "false"
+        - name: GITLAB_HOSTNAME
+          value: "my-gitlab.example.com"
+        - name: GITLAB_API_VERSION
+          value: "v4"
+        - name: ENABLE_SYNC_ENDPOINT
+          value: "false"
+        - name: GITLAB_PRIVATE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-integrator-private-token
+              key: token
+        - name: CEPH_USER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ceph-user-key
+              key: key
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+```
+
 ### CEPH Secret User Features
 In order to allow for all namespaces to access a DefaultStorageClass of type CEPH, this 
 service will automatically create a ceph-secret-user Secret in every created namespace if 
@@ -80,6 +235,7 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no
 |ENABLE_GITLAB_SYNC_DEBUG| no| If set to 'true' the sync process will output debug info
+
 ### Roles and Permissions
 
 We came up with a default for Roles and Persmissions as follows:
