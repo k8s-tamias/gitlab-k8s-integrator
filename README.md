@@ -184,7 +184,7 @@ spec:
         ports:
         - containerPort: 8080
         volumeMounts:
-        - name: custom-roles-and-bindings
+        - name: custom-roles
           mountPath: /etc/custom-roles
         resources:
           requests:
