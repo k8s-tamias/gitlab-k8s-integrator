@@ -37,8 +37,9 @@ func CreateNamespace(name string) {
 	// this has been implemented due to the asynchronous manner in which the webhook calls might be received
 	// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
 	// the correct one
-	if actualNs := GetActualNameSpaceNameByGitlabName(name); actualNs != "" { return }
-
+	if actualNs := GetActualNameSpaceNameByGitlabName(name); actualNs != "" {
+		return
+	}
 
 	nsName, err := GitlabNameToK8sNamespace(name)
 	if check(err) {
@@ -77,7 +78,7 @@ func CreateNamespace(name string) {
 			_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 		}
 	}
-	log.Println(fmt.Sprintf("Succesfully created Namespace %s for Gitlab Ressource %s",nsName, name))
+	log.Println(fmt.Sprintf("Succesfully created Namespace %s for Gitlab Ressource %s", nsName, name))
 	// finally deploy CEPH Secret User if specified via ENV var
 	DeployCEPHSecretUser(nsName)
 
@@ -129,7 +130,7 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
-	if k8serrors.IsNotFound(err){
+	if k8serrors.IsNotFound(err) {
 		CreateNamespace(path)
 		_, err = getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	}
@@ -172,7 +173,7 @@ func CreateGroupRoleBinding(username, path, accessLevel string) {
 		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: GetGroupRoleName(accessLevel), APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
-	if k8serrors.IsNotFound(err){
+	if k8serrors.IsNotFound(err) {
 		CreateNamespace(path)
 		_, err = getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	}
