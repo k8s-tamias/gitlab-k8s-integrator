@@ -219,6 +219,9 @@ spec:
           periodSeconds: 10
 ```
 
+The supported/allowed K8s object types are: Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount.
+Recursive directory structures are *not* supported!
+
 ### CEPH Secret User Features
 In order to allow for all namespaces to access a DefaultStorageClass of type CEPH, this 
 service will automatically create a ceph-secret-user Secret in every created namespace if 
