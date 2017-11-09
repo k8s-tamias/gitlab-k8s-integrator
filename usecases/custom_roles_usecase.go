@@ -52,7 +52,7 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 		isYaml := regExp.MatchString(f.Name())
 
 		if !f.IsDir() && isYaml {
-			fileR, err := ioutil.ReadFile(f.Name())
+			fileR, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", customDir, f.Name()))
 			if err != nil {
 				log.Printf("An error occurred while reading file %s from directory %s. Err: %s", f.Name(), customDir, err)
 				return res
