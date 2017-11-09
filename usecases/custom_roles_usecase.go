@@ -27,7 +27,13 @@ type CustomRolesAndBindings struct {
 }
 
 func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
-	res := CustomRolesAndBindings{}
+	res := CustomRolesAndBindings{
+		 Roles: 				make(map[string]bool),
+		 RoleBindings:			make(map[string]bool),
+		 ClusterRoles:			make(map[string]bool),
+		 ClusterRoleBindings: 	make(map[string]bool),
+		 ServiceAccounts:		make(map[string]bool),
+	}
 
 	customDir := getCustomRoleDir()
 	customRolesPresent, err := fileExists(customDir)
@@ -62,6 +68,7 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 			objects := parseK8sYaml(fileR)
 			for _, o := range objects {
 				switch o := o.(type) {
+
 				case *v1beta1.Role:
 					res.Roles[o.Name] = true
 					k8sclient.RbacV1beta1().Roles(o.Namespace).Create(o)
