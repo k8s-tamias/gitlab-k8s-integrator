@@ -234,6 +234,7 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |GITLAB_HOSTNAME | yes | The hostname of the Gitlab server to work with
 |GITLAB_API_VERSION| no (default: v4) | The Version of the Gitlab API to use.
 |GITLAB_PRIVATE_TOKEN| yes | The private access token from a Gitlab admin user to use when calling the API
+|GITLAB_SECRET_TOKEN| no | The secret token which can be set in Gitlab System Hooks to validate the request on our side
 |CEPH_USER_KEY| no | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no

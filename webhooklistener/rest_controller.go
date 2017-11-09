@@ -55,6 +55,12 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		// if GITLAB_SECRET_TOKEN env is set and is unequal to provided token, deny request
+		if getGitlabSecretToken() != "" && r.Header.Get("X-Gitlab-Token") != getGitlabSecretToken(){
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			HandleError(err, w, "Could not read body!", http.StatusBadRequest)
@@ -81,4 +87,8 @@ func HandleError(err error, w http.ResponseWriter, msg string, statusCode int) {
 		w.Write(answer)
 	}
 	return
+}
+
+func getGitlabSecretToken() string {
+	return os.Getenv("GITLAB_SECRET_TOKEN")
 }
