@@ -68,7 +68,7 @@ func TestGitlabNameToK8sLabel(t *testing.T) {
 
 func TestK8sLabelToGitlabName(t *testing.T) {
 	k1 := "uP_uP-Chief"
-	g1, err := K8sLabelToGitlabName(k1)
+	g1, err := k8sLabelToGitlabName(k1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,7 +77,7 @@ func TestK8sLabelToGitlabName(t *testing.T) {
 	}
 
 	k2 := "u__P_uP-Chief"
-	g2, err := K8sLabelToGitlabName(k2)
+	g2, err := k8sLabelToGitlabName(k2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -86,7 +86,7 @@ func TestK8sLabelToGitlabName(t *testing.T) {
 	}
 
 	k3 := "u____.P_uP-Chief"
-	g3, err := K8sLabelToGitlabName(k3)
+	g3, err := k8sLabelToGitlabName(k3)
 	if err != nil {
 		t.Error(err)
 	}
@@ -95,7 +95,7 @@ func TestK8sLabelToGitlabName(t *testing.T) {
 	}
 
 	k4 := "uP-uP-Chief"
-	g4, err := K8sLabelToGitlabName(k4)
+	g4, err := k8sLabelToGitlabName(k4)
 	if err != nil {
 		t.Error(err)
 	}

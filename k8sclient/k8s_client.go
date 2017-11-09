@@ -215,7 +215,7 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 	vsf := make([]string, 0)
 	for _, v := range nsList.Items {
 		if labelName := v.Labels["gitlab-origin"]; labelName != "" {
-			gitlabName, err := K8sLabelToGitlabName(labelName)
+			gitlabName, err := k8sLabelToGitlabName(labelName)
 			if check(err) {
 				log.Fatal("Error while transforming labelName back to Gitlab Name. Err: " + err.Error())
 			}
@@ -269,6 +269,62 @@ func GetRoleBindingsByNamespace(namespace string) map[string]bool {
 
 func ConstructRoleBindingName(username, rolename, ns string) string {
 	return username + "-" + rolename + "-" + ns
+}
+
+func GetProjectRoleName(accessLevel string) string {
+	var rname string
+	switch accessLevel {
+	case "Master":
+		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-project-master"
+		}
+	case "Reporter":
+		rname = os.Getenv("PROJECT_REPORTER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-project-reporter"
+		}
+	case "Developer":
+		rname = os.Getenv("PROJECT_DEVELOPER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-project-developer"
+		}
+
+	default:
+		rname = os.Getenv("PROJECT_DEFAULT_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-project-guest"
+		}
+	}
+	return rname
+}
+
+func GetGroupRoleName(accessLevel string) string {
+	var rname string
+	switch accessLevel {
+	case "Master":
+		rname = os.Getenv("GROUP_MASTER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-group-master"
+		}
+	case "Reporter":
+		rname = os.Getenv("GROUP_REPORTER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-group-reporter"
+		}
+	case "Developer":
+		rname = os.Getenv("GROUP_DEVELOPER_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-group-developer"
+		}
+
+	default:
+		rname = os.Getenv("GROUP_DEFAULT_ROLENAME")
+		if rname == "" {
+			rname = "gitlab-group-guest"
+		}
+	}
+	return rname
 }
 
 // Internal Functions
@@ -326,7 +382,7 @@ func GitlabNameToK8sLabel(givenName string) (string, error) {
 	return labelName, nil
 }
 
-func K8sLabelToGitlabName(givenName string) (string, error) {
+func k8sLabelToGitlabName(givenName string) (string, error) {
 	/*
 		Rules:
 		1) “.” <- “.”
@@ -351,62 +407,6 @@ func K8sLabelToGitlabName(givenName string) (string, error) {
 	}
 
 	return labelName, nil
-}
-
-func GetProjectRoleName(accessLevel string) string {
-	var rname string
-	switch accessLevel {
-	case "Master":
-		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-project-master"
-		}
-	case "Reporter":
-		rname = os.Getenv("PROJECT_REPORTER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-project-reporter"
-		}
-	case "Developer":
-		rname = os.Getenv("PROJECT_DEVELOPER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-project-developer"
-		}
-
-	default:
-		rname = os.Getenv("PROJECT_DEFAULT_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-project-guest"
-		}
-	}
-	return rname
-}
-
-func GetGroupRoleName(accessLevel string) string {
-	var rname string
-	switch accessLevel {
-	case "Master":
-		rname = os.Getenv("GROUP_MASTER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-group-master"
-		}
-	case "Reporter":
-		rname = os.Getenv("GROUP_REPORTER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-group-reporter"
-		}
-	case "Developer":
-		rname = os.Getenv("GROUP_DEVELOPER_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-group-developer"
-		}
-
-	default:
-		rname = os.Getenv("GROUP_DEFAULT_ROLENAME")
-		if rname == "" {
-			rname = "gitlab-group-guest"
-		}
-	}
-	return rname
 }
 
 func getK8sClient() *kubernetes.Clientset {

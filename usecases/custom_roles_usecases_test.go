@@ -126,7 +126,7 @@ roleRef:
   name: daemon-set-allowance-role
   apiGroup: rbac.authorization.k8s.io
 `
-	objects := ParseK8sYaml([]byte(deployment))
+	objects := parseK8sYaml([]byte(deployment))
 	if objects == nil { t.Error("result was nil")}
 	if len(objects) != 6 { t.Error("not enough objects deserialized")}
 
@@ -137,7 +137,7 @@ metadata:
   name: mars-group-serviceaccount
   namespace: abb256
 `
-	objects = ParseK8sYaml([]byte(deployment2))
+	objects = parseK8sYaml([]byte(deployment2))
 	if objects == nil { t.Error("result was nil")}
 	if len(objects) != 1 { t.Error("not enough objects deserialized")}
 
@@ -149,7 +149,7 @@ metadata:
   namespace: abb256
 ---
 `
-	objects = ParseK8sYaml([]byte(deployment3))
+	objects = parseK8sYaml([]byte(deployment3))
 	if objects == nil { t.Error("result was nil")}
 	if len(objects) != 1 { t.Error("not enough objects deserialized")}
 }

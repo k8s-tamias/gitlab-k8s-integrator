@@ -100,6 +100,10 @@ func PerformGlK8sSync() {
 		}
 	}
 
+	log.Println("Reading custom-rolebindings if any...")
+
+	cRaB := ReadAndApplyCustomRolesAndBindings()
+
 	log.Println("Syncing Gitlab Users...")
 	// 2. iterate all gitlab "namespaces"
 	for _, user := range gitlabContent.Users {
@@ -113,7 +117,7 @@ func PerformGlK8sSync() {
 
 			// 2.1 Iterate all roleBindings
 			for rb := range k8sRoleBindings {
-				if rb != expectedGitlabRolebindingName {
+				if rb != expectedGitlabRolebindingName && !cRaB.RoleBindings[rb] {
 					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
 				}
 			}
@@ -173,9 +177,9 @@ func PerformGlK8sSync() {
 				}
 			}
 
-			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
+			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab or in custom roles
 			for rb := range k8sRoleBindings {
-				if !expectedRoleBindings[rb] {
+				if !expectedRoleBindings[rb] && !cRaB.RoleBindings[rb]{
 					if debugSync() {
 						log.Println("Deleting RoleBinding " + rb)
 					}
@@ -222,7 +226,7 @@ func PerformGlK8sSync() {
 
 			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab
 			for rb := range k8sRoleBindings {
-				if !expectedRoleBindings[rb] {
+				if !expectedRoleBindings[rb] && !cRaB.RoleBindings[rb] {
 					k8sclient.DeleteProjectRoleBindingByName(rb, actualNamespace)
 				}
 			}
