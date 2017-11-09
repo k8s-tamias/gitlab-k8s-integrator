@@ -152,4 +152,31 @@ metadata:
 	objects = parseK8sYaml([]byte(deployment3))
 	if objects == nil { t.Error("result was nil")}
 	if len(objects) != 1 { t.Error("not enough objects deserialized")}
+
+	var deployment4 = `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: mars-group-serviceaccount
+ namespace: mars
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+ name: mars-group-sim-runner
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: mars-sim-runner-role
+subjects:
+ - kind: ServiceAccount
+   name: mars-group-serviceaccount
+   namespace: mars
+
+---`
+	objects = parseK8sYaml([]byte(deployment4))
+	if objects == nil { t.Error("result was nil")}
+	if len(objects) != 2 { t.Error("not enough objects deserialized")}
 }
