@@ -26,49 +26,6 @@ import (
 	"strconv"
 )
 
-type GitlabGroup struct {
-	Id       int
-	FullPath string `json:"full_path"`
-	Members  []Member
-}
-
-type GitlabProject struct {
-	Id                int
-	PathWithNameSpace string `json:"path_with_namespace"`
-	Members           []Member
-	Links             Links     `json:"_links"`
-	Namespace         Namespace `json:"namespace"`
-}
-
-type Namespace struct {
-	Id       int
-	Name     string
-	Path     string
-	Kind     string
-	FullPath string
-}
-
-type Links struct {
-	Members string
-}
-
-type GitlabUser struct {
-	Username string `json:"username"`
-}
-
-type Member struct {
-	Id          int    `json:"id"`
-	Username    string `json:"username"`
-	Name        string `json:"name"`
-	State       string `json:"state"`
-	AccessLevel int    `json:"access_level"`
-}
-
-type GitlabContent struct {
-	Groups   []GitlabGroup
-	Projects []GitlabProject
-	Users    []GitlabUser
-}
 
 func GetFullGitlabContent() (GitlabContent, error) {
 	groupUrl := getGitlabBaseUrl() + "groups"
@@ -291,13 +248,7 @@ func (p *GitlabProject) getMembers() error {
 	return nil
 }
 
-func getGitlabBaseUrl() string {
-	apiVersion := os.Getenv("GITLAB_API_VERSION")
-	if apiVersion == "" {
-		apiVersion = "v4"
-	}
-	return fmt.Sprintf("https://%s/api/%s/", os.Getenv("GITLAB_HOSTNAME"), apiVersion)
-}
+
 
 func performGitlabHTTPRequest(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
@@ -311,19 +262,4 @@ func performGitlabHTTPRequest(url string) (*http.Response, error) {
 
 }
 
-func contains(s []Member, e Member) bool {
-	for _, a := range s {
-		if a.Id == e.Id {
-			return true
-		}
-	}
-	return false
-}
 
-func check(err error) bool {
-	if err != nil {
-		log.Println("Error : ", err.Error())
-		return true
-	}
-	return false
-}
