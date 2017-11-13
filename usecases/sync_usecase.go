@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"sync"
 )
 
 /*
@@ -136,7 +137,19 @@ func PerformGlK8sSync() {
 		}
 	}
 
+	var syncDoneWg sync.WaitGroup
+
 	log.Println("Syncing Gitlab Groups...")
+	syncGroups(gitlabContent, cRaB, syncDoneWg)
+	log.Println("Syncing Gitlab Projects...")
+	syncProjects(gitlabContent, cRaB, syncDoneWg)
+	// same same for Projects
+
+	log.Println("Finished Synchronization run.")
+
+}
+func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup){
+	defer syncDoneWg.Done()
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
 		if debugSync() {
@@ -201,9 +214,10 @@ func PerformGlK8sSync() {
 			}
 		}
 	}
+}
 
-	log.Println("Syncing Gitlab Projects...")
-	// same same for Projects
+func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup) {
+	defer syncDoneWg.Done()
 	for _, project := range gitlabContent.Projects {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(project.PathWithNameSpace)
 		if actualNamespace != "" {
@@ -242,8 +256,6 @@ func PerformGlK8sSync() {
 			}
 		}
 	}
-	log.Println("Finished Synchronization run.")
-
 }
 
 func StartRecurringSyncTimer() {

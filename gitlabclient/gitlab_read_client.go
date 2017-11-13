@@ -27,7 +27,7 @@ import (
 )
 
 
-func GetFullGitlabContent() (GitlabContent, error) {
+func GetFullGitlabContent() (*GitlabContent, error) {
 	groupUrl := getGitlabBaseUrl() + "groups"
 	foundGroups, err := GetAllGroups(make([]GitlabGroup, 0), groupUrl)
 	if check(err) {
@@ -43,7 +43,7 @@ func GetFullGitlabContent() (GitlabContent, error) {
 	if check(err) {
 		log.Fatal(err.Error())
 	}
-	return GitlabContent{Groups: foundGroups, Projects: foundProjects, Users: foundUsers}, nil
+	return &GitlabContent{Groups: foundGroups, Projects: foundProjects, Users: foundUsers}, nil
 }
 
 func GetAllGroups(gitlabGroups []GitlabGroup, url string) ([]GitlabGroup, error) {
