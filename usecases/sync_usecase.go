@@ -105,8 +105,24 @@ func PerformGlK8sSync() {
 
 	cRaB := ReadAndApplyCustomRolesAndBindings()
 
+	var syncDoneWg sync.WaitGroup
+
 	log.Println("Syncing Gitlab Users...")
 	// 2. iterate all gitlab "namespaces"
+	go syncUsers(gitlabContent, cRaB, syncDoneWg)
+
+	log.Println("Syncing Gitlab Groups...")
+	go syncGroups(gitlabContent, cRaB, syncDoneWg)
+
+	log.Println("Syncing Gitlab Projects...")
+	go syncProjects(gitlabContent, cRaB, syncDoneWg)
+
+	syncDoneWg.Wait()
+	log.Println("Finished Synchronization run.")
+}
+
+func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup){
+	defer syncDoneWg.Done()
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
 		if actualNamespace != "" {
@@ -136,18 +152,8 @@ func PerformGlK8sSync() {
 			k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
 		}
 	}
-
-	var syncDoneWg sync.WaitGroup
-
-	log.Println("Syncing Gitlab Groups...")
-	syncGroups(gitlabContent, cRaB, syncDoneWg)
-	log.Println("Syncing Gitlab Projects...")
-	syncProjects(gitlabContent, cRaB, syncDoneWg)
-	// same same for Projects
-
-	log.Println("Finished Synchronization run.")
-
 }
+
 func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup){
 	defer syncDoneWg.Done()
 	// same same for Groups
