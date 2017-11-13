@@ -19,15 +19,26 @@ func CreateServiceAccountAndSecret(username, namespace string) (ServiceAccountIn
 	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name:username, Namespace: namespace}}
 
 	sa, err := client.ServiceAccounts(namespace).Create(sa)
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
+
+	if k8serrors.IsAlreadyExists(err) {
+		sa, err = client.ServiceAccounts(namespace).Get(username, metav1.GetOptions{})
+		if err != nil {
+			return ServiceAccountInfo{}, err
+		}
+	} else if err != nil {
 		return ServiceAccountInfo{}, err
 	}
+
 	if len(sa.Secrets) < 1 {
 		return ServiceAccountInfo{}, errors.New("ServiceAccount was created, but Secrets were empty!")
 	}
 	secretName := sa.Secrets[0].Name
 	saSecret, err := client.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	token := saSecret.Data["token"]
+	if len(token) <= 0 {
+		return ServiceAccountInfo{}, errors.New("The token field in the Secret's data was empty!")
+	}
+
 	tokenAsString := string(token[:])
 
 	sAI := ServiceAccountInfo{Namespace: namespace, Name: username, Token: tokenAsString}

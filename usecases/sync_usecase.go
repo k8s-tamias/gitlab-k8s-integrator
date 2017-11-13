@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 	"sync"
+	"fmt"
 )
 
 /*
@@ -127,6 +128,11 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
 		if actualNamespace != "" {
+			// create or get ServiceAccount
+			sAI, err := k8sclient.CreateServiceAccountAndSecret(user.Username, actualNamespace)
+			if err != nil {
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s"), err)
+			}
 
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
