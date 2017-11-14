@@ -8,6 +8,7 @@ import (
 	"log"
 	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
 	"time"
+	"strings"
 )
 
 type ServiceAccountInfo struct {
@@ -18,6 +19,7 @@ type ServiceAccountInfo struct {
 
 // CreateServiceAccountAndRoleBinding creates a ServiceAccount and a matching secret to use it.
 func CreateServiceAccountAndRoleBinding(name, fullProjectPath string) (ServiceAccountInfo, string, error) {
+	name = strings.ToLower(name)
 	namespace := GetActualNameSpaceNameByGitlabName(fullProjectPath)
 
 	client := getK8sClient()
@@ -40,7 +42,7 @@ func CreateServiceAccountAndRoleBinding(name, fullProjectPath string) (ServiceAc
 	serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 	// The secret in the ServiceAccount is not created and linked immediately, so we have to wait for it
 	// to not wait indefinitely we use a timeout
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(30 * time.Second)
 	tick := time.Tick(500 * time.Millisecond)
 	// Keep trying until we're timed out or got a result or got an error
 	for k8serrors.IsNotFound(err) || len(serviceAccount.Secrets) < 1 {
