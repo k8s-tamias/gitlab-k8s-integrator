@@ -15,8 +15,14 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 		return
 	}
 
-
 	url := fmt.Sprintf("%sprojects/%s/services/kubernetes",getGitlabBaseUrl(),projectId)
+
+
+	if isK8sIntegrationSetup(url) {
+		return
+	}
+
+
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -47,4 +53,14 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	} else {
 		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s was succesfull!", projectId))
 	}
+}
+func isK8sIntegrationSetup(url string) bool {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
+
+	resp, err := http.DefaultClient.Do(req)
+	// TODO: Check if kubernetes integration is already setup!
 }
