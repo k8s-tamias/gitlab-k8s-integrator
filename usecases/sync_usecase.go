@@ -235,7 +235,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			expectedRoleBindings := map[string]bool{}
 
 			// create or get ServiceAccount
-			serviceAccountInfo, roleBindingName, err := k8sclient.CreateServiceAccountAndRoleBinding(project.Path, project.PathWithNameSpace)
+			serviceAccountInfo, roleBindingName, err := k8sclient.CreateServiceAccountAndRoleBinding(project.PathWithNameSpace)
 			if err != nil {
 				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s"), err)
 			}
@@ -272,7 +272,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 		} else {
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(project.PathWithNameSpace)
-			serviceAccountInfo, _, err := k8sclient.CreateServiceAccountAndRoleBinding(project.Path, project.PathWithNameSpace)
+			serviceAccountInfo, _, err := k8sclient.CreateServiceAccountAndRoleBinding(project.PathWithNameSpace)
 			if err != nil {
 				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s", err))
 			}
