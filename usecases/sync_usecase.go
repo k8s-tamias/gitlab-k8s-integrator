@@ -109,6 +109,7 @@ func PerformGlK8sSync() {
 
 	var syncDoneWg sync.WaitGroup
 	syncDoneWg.Add(3)
+
 	log.Println("Syncing Gitlab Users...")
 	go syncUsers(gitlabContent, cRaB, &syncDoneWg)
 
@@ -121,8 +122,6 @@ func PerformGlK8sSync() {
 	syncDoneWg.Wait()
 	log.Println("Finished Synchronization run.")
 }
-
-// TODO also delete ServiceAccounts and associated Rolebindings in Namespaces when users get deleted from namespaces
 
 func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup){
 	defer syncDoneWg.Done()
