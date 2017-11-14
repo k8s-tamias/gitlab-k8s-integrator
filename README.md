@@ -64,6 +64,15 @@ This does not touch namespaces unrelated to Gitlab (i.e. that do not match with 
 If you don't want a specific namespace to be synced with gitlab, just add a 'gitlab-ignored' label with an arbitrary value to
 the namespace. The integrator will then not attempt to sync it.      
 
+#### Create K8s ServiceAccounts and activate K8s Integration in Gitlab
+
+The Gl-K8s-Integrator automatically creates ServiceAccounts in Kubernetes Namespaces it created. It also takes the access tokens
+of these ServiceAccounts and uses them to setup the Gitlab Kubernetes Service Integration for projects. The rules are as follows:
+
+- A project contains all information to allow itself to auto-deploy
+- Integrator sets up K8s service integration in Gitlab with a ServiceAccount associated to the gitlab-group-master role
+- Integrator also creates a Gitlab Environment by the name of "development"
+
 #### Add custom roles and bindings
 Sometimes additional roles and bindings beyond those defined for the gitlab cluster roles are required (i.e. a ServiceAccount 
 with elevated permissions for some special project in a certain namespace). If you keep the sync feature of this 

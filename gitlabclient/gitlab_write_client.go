@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func WriteTokenToGitlab(projectId, namespace, token string) {
+func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	url := fmt.Sprintf("%sprojects/%s/services/kubernetes",getGitlabBaseUrl(),projectId)
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {

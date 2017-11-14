@@ -18,6 +18,7 @@ type GitlabProject struct {
 	Members           []Member
 	Links             Links     `json:"_links"`
 	Namespace         Namespace `json:"namespace"`
+	Path			  string    `json:"path"`
 }
 
 type Namespace struct {
@@ -74,5 +75,9 @@ func getGitlabBaseUrl() string {
 	if apiVersion == "" {
 		apiVersion = "v4"
 	}
-	return fmt.Sprintf("https://%s/api/%s/", os.Getenv("GITLAB_HOSTNAME"), apiVersion)
+	hostName := os.Getenv("GITLAB_HOSTNAME")
+	if hostName == "" {
+		log.Fatal("The GITLAB_HOSTNAME ENV has not been set!")
+	}
+	return fmt.Sprintf("https://%s/api/%s/", hostName, apiVersion)
 }
