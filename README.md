@@ -70,7 +70,7 @@ The Gl-K8s-Integrator automatically creates ServiceAccounts in Kubernetes Namesp
 of these ServiceAccounts and uses them to setup the Gitlab Kubernetes Service Integration for projects. The rules are as follows:
 
 - A project contains all information to allow itself to auto-deploy
-- Integrator sets up K8s service integration in Gitlab with a ServiceAccount associated to the gitlab-group-master role
+- Integrator sets up K8s service integration in Gitlab with a ServiceAccount by the name "gitlab-serviceaccount" associated to the gitlab-group-master role
 - Integrator also creates a Gitlab Environment by the name of "development"
 
 #### Add custom roles and bindings
@@ -244,7 +244,8 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |GITLAB_API_VERSION| no (default: v4) | The Version of the Gitlab API to use.
 |GITLAB_PRIVATE_TOKEN| yes | The private access token from a Gitlab admin user to use when calling the API
 |GITLAB_SECRET_TOKEN| no | The secret token which can be set in Gitlab System Hooks to validate the request on our side
-|CEPH_USER_KEY| no | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
+|GITLAB_SERVICEACCOUNT_NAME| no | Must be DNS-1123 compliant! If set it will override the name of the default service account created in each namespace
+|CEPH_USER_KEY| no (default: gitlab-serviceaccount) | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
 |K8S_API_URL| no | If set, will be written to the kubernetes service integration for any project
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no

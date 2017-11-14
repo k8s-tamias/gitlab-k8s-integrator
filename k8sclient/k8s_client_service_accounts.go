@@ -4,11 +4,12 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"github.com/pkg/errors"
 	"log"
 	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
 	"time"
-	"strings"
+	"os"
 )
 
 type ServiceAccountInfo struct {
@@ -18,8 +19,8 @@ type ServiceAccountInfo struct {
 }
 
 // CreateServiceAccountAndRoleBinding creates a ServiceAccount and a matching secret to use it.
-func CreateServiceAccountAndRoleBinding(name, fullProjectPath string) (ServiceAccountInfo, string, error) {
-	name = strings.ToLower(name)
+func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountInfo, string, error) {
+	name := getServiceAccountName()
 	namespace := GetActualNameSpaceNameByGitlabName(fullProjectPath)
 
 	client := getK8sClient()
@@ -95,4 +96,14 @@ func createServiceAccountRoleBinding(saName, path string) string {
 		log.Fatal("Communication with K8s Server threw error, while creating ServiceAccount RoleBinding. Err: " + err.Error())
 	}
 	return rb.Name
+}
+
+func getServiceAccountName() string {
+	name := os.Getenv("GITLAB_SERVICEACCOUNT_NAME")
+	if name == "" {
+		name = "gitlab-serviceaccount"
+	} else if errs := validation.IsDNS1123Label(name) ; len(errs) != 0 {
+		log.Fatalf("The provided value for GITLAB_SERVICEACCOUNT_NAME is not a DNS-1123 compliant name!")
+	}
+	return name
 }
