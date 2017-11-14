@@ -60,7 +60,7 @@ func isK8sIntegrationSetup(url string) bool {
 		log.Fatalln(err)
 	}
 	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
-
-	resp, err := http.DefaultClient.Do(req)
+	return false
+	//resp, err := http.DefaultClient.Do(req)
 	// TODO: Check if kubernetes integration is already setup!
 }

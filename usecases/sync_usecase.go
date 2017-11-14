@@ -108,7 +108,7 @@ func PerformGlK8sSync() {
 	cRaB := ReadAndApplyCustomRolesAndBindings()
 
 	var syncDoneWg sync.WaitGroup
-
+	syncDoneWg.Add(3)
 	log.Println("Syncing Gitlab Users...")
 	go syncUsers(gitlabContent, cRaB, &syncDoneWg)
 
