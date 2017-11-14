@@ -274,7 +274,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			k8sclient.CreateNamespace(project.PathWithNameSpace)
 			serviceAccountInfo, _, err := k8sclient.CreateServiceAccountAndRoleBinding(project.Path, project.PathWithNameSpace)
 			if err != nil {
-				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s"), err)
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s", err))
 			}
 			// configure project in gitlab for K8s integration
 			gitlabclient.SetupK8sIntegrationForGitlabProject(strconv.Itoa(project.Id), serviceAccountInfo.Namespace, serviceAccountInfo.Token)

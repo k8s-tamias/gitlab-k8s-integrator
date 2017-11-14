@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
+	"time"
 )
 
 type ServiceAccountInfo struct {
@@ -23,11 +24,11 @@ func CreateServiceAccountAndRoleBinding(name, fullProjectPath string) (ServiceAc
 
 	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace}}
 
-	sa, err := client.ServiceAccounts(namespace).Create(sa)
+	serviceAccount, err := client.ServiceAccounts(namespace).Create(sa)
 
 	if k8serrors.IsAlreadyExists(err) {
 		// ServiceAccount already exists, so retrieve and use it
-		sa, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+		serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return ServiceAccountInfo{},"", err
 		}
@@ -35,10 +36,28 @@ func CreateServiceAccountAndRoleBinding(name, fullProjectPath string) (ServiceAc
 		return ServiceAccountInfo{}, "", err
 	}
 
-	if len(sa.Secrets) < 1 {
-		return ServiceAccountInfo{}, "", errors.New("ServiceAccount was created, but Secrets were empty!")
+	// try to retrieve ServiceAccount once as the newly created one won't have the secret set
+	serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	// The secret in the ServiceAccount is not created and linked immediately, so we have to wait for it
+	// to not wait indefinitely we use a timeout
+	timeout := time.After(10 * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
+	// Keep trying until we're timed out or got a result or got an error
+	for k8serrors.IsNotFound(err) || len(serviceAccount.Secrets) < 1 {
+		select {
+		// Got a timeout! fail with a timeout error
+		case <-timeout:
+			return ServiceAccountInfo{}, "", errors.New("ServiceAccount was created, but Secrets were empty!")
+
+		case <-tick:
+			serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+			if err != nil && !k8serrors.IsNotFound(err) {
+				return ServiceAccountInfo{},"", err
+			}
+		}
 	}
-	secretName := sa.Secrets[0].Name
+
+	secretName := serviceAccount.Secrets[0].Name
 	saSecret, err := client.Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	token := saSecret.Data["token"]
 	if len(token) <= 0 {
