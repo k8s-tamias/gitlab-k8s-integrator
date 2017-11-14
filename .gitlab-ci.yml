@@ -24,6 +24,7 @@ buildAndTest:
   variables:
     CGO_ENABLED: "0"
     GOOS: "linux"
+    GITLAB_HOSTNAME: "foo.bar"
   script:
     - dep ensure -v
     - go test $(go list ./... | grep -v /vendor/)

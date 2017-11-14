@@ -8,19 +8,28 @@ import (
 )
 
 func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
+	k8sUrl := os.Getenv("K8S_API_URL")
+	if k8sUrl == "" {
+		// abort if K8S_API_URL was not set
+		log.Println("K8S_API_URL was not set, skipping setup of K8s integration in Gitlab...")
+		return
+	}
+
+
 	url := fmt.Sprintf("%sprojects/%s/services/kubernetes",getGitlabBaseUrl(),projectId)
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	k8sUrl := os.Getenv("K8S_API_URL")
-
 	q := req.URL.Query()
 	q.Add("token",token)
 	q.Add("namespace", namespace)
-	if k8sUrl != "" {
-		q.Add("api_url", k8sUrl)
+	q.Add("api_url", k8sUrl)
+
+	caPem := os.Getenv("K8S_CA_PEM")
+	if caPem != "" {
+		q.Add("ca_pem", caPem)
 	}
 
 	req.URL.RawQuery = q.Encode()
@@ -36,8 +45,6 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	if resp.StatusCode != http.StatusOK {
 		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s failed with errorCode %d", projectId, resp.StatusCode))
 	} else {
-		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s was succesful!", projectId))
+		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s was succesfull!", projectId))
 	}
 }
-
-
