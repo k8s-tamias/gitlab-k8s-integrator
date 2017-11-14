@@ -110,13 +110,13 @@ func PerformGlK8sSync() {
 	var syncDoneWg sync.WaitGroup
 
 	log.Println("Syncing Gitlab Users...")
-	go syncUsers(gitlabContent, cRaB, syncDoneWg)
+	go syncUsers(gitlabContent, cRaB, &syncDoneWg)
 
 	log.Println("Syncing Gitlab Groups...")
-	go syncGroups(gitlabContent, cRaB, syncDoneWg)
+	go syncGroups(gitlabContent, cRaB, &syncDoneWg)
 
 	log.Println("Syncing Gitlab Projects...")
-	go syncProjects(gitlabContent, cRaB, syncDoneWg)
+	go syncProjects(gitlabContent, cRaB, &syncDoneWg)
 
 	syncDoneWg.Wait()
 	log.Println("Finished Synchronization run.")
@@ -124,7 +124,7 @@ func PerformGlK8sSync() {
 
 // TODO also delete ServiceAccounts and associated Rolebindings in Namespaces when users get deleted from namespaces
 
-func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup){
+func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup){
 	defer syncDoneWg.Done()
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
@@ -157,7 +157,7 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 	}
 }
 
-func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup){
+func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup){
 	defer syncDoneWg.Done()
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
@@ -225,7 +225,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 	}
 }
 
-func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg sync.WaitGroup) {
+func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup) {
 	defer syncDoneWg.Done()
 	for _, project := range gitlabContent.Projects {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(project.PathWithNameSpace)
