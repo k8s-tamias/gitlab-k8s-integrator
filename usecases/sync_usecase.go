@@ -241,7 +241,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			expectedRoleBindings[roleBindingName] = true
 
 			// configure project in gitlab for K8s integration
-			gitlabclient.SetupK8sIntegrationForGitlabProject(strconv.Itoa(project.Id), serviceAccountInfo.Namespace, serviceAccountInfo.Token)
+			go gitlabclient.SetupK8sIntegrationForGitlabProject(strconv.Itoa(project.Id), serviceAccountInfo.Namespace, serviceAccountInfo.Token)
 
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
@@ -275,12 +275,15 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			if err != nil {
 				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s", err))
 			}
+
 			// configure project in gitlab for K8s integration
-			gitlabclient.SetupK8sIntegrationForGitlabProject(strconv.Itoa(project.Id), serviceAccountInfo.Namespace, serviceAccountInfo.Token)
+			go gitlabclient.SetupK8sIntegrationForGitlabProject(strconv.Itoa(project.Id), serviceAccountInfo.Namespace, serviceAccountInfo.Token)
+
 			for _, member := range project.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
 			}
+
 		}
 	}
 }
