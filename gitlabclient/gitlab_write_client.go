@@ -38,6 +38,7 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	req.URL.RawQuery = q.Encode()
 
 	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
+	req.Header.Add("SUDO", "root")
 
 	resp, err := http.DefaultClient.Do(req)
 
