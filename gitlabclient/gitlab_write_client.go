@@ -94,9 +94,9 @@ func setupEnvironment(projectId string){
 		if len(msg.Message.Name) > 0 && msg.Message.Name[0] == "has already been taken" {
 			return
 		}
-		log.Println(fmt.Sprintf("Creation of environment failed with http error %d", resp.StatusCode))
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %d, projectID was: %s", resp.StatusCode, projectId))
 	default:
-		log.Println(fmt.Sprintf("Creation of environment failed with http error %d", resp.StatusCode))
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %d, projectID was: %s", resp.StatusCode, projectId))
 	}
 }
 
