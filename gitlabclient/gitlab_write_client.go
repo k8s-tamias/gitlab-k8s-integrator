@@ -42,7 +42,7 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		log.Println(fmt.Sprintf("Could not set up Kubernetes Integration for project %s . Err was: %s ", projectId, err))
+		log.Println(fmt.Sprintf("Could not set up Kubernetes Integration for project %s . Err was: %s ", projectId, err.Error()))
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -64,7 +64,7 @@ type Msg struct {
 
 func setupEnvironment(projectId string){
 	envName := "icc-dev"
-	url := fmt.Sprintf("%sprojects/%s/environments/kubernetes",getGitlabBaseUrl(),projectId)
+	url := fmt.Sprintf("%sprojects/%s/environments",getGitlabBaseUrl(),projectId)
 	values := map[string]string{"id": projectId, "name": envName}
 	jsonValue, err := json.Marshal(values)
 	if err != nil {
@@ -94,9 +94,9 @@ func setupEnvironment(projectId string){
 		if len(msg.Message.Name) > 0 && msg.Message.Name[0] == "has already been taken" {
 			return
 		}
-		log.Println(fmt.Sprintf("Creation of environment failed with http error %s", resp.StatusCode))
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %d", resp.StatusCode))
 	default:
-		log.Println(fmt.Sprintf("Creation of environment failed with http error %s", resp.StatusCode))
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %d", resp.StatusCode))
 	}
 }
 
