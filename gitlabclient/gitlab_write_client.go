@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"fmt"
+	"encoding/json"
+	"bytes"
+	"io/ioutil"
 )
 
 func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
@@ -44,6 +47,56 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s failed with errorCode %d", projectId, resp.StatusCode))
+	}
+
+	setupEnvironment(projectId)
+}
+
+type ErrorMessage struct {
+	Message Msg
+}
+
+type Msg struct {
+	Name []string
+	Slug []string
+}
+
+
+func setupEnvironment(projectId string){
+	envName := "icc-dev"
+	url := fmt.Sprintf("%sprojects/%s/environments/kubernetes",getGitlabBaseUrl(),projectId)
+	values := map[string]string{"id": projectId, "name": envName}
+	jsonValue, err := json.Marshal(values)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost,url, bytes.NewBuffer(jsonValue))
+	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	switch resp.StatusCode {
+	case http.StatusCreated:
+		return
+
+	case http.StatusBadRequest:
+		var msg ErrorMessage
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		json.Unmarshal(body, &msg)
+		if len(msg.Message.Name) > 0 && msg.Message.Name[0] == "has already been taken" {
+			return
+		}
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %s", resp.StatusCode))
+	default:
+		log.Println(fmt.Sprintf("Creation of environment failed with http error %s", resp.StatusCode))
 	}
 }
 
