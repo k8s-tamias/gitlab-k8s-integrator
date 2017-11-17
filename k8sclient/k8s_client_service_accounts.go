@@ -18,7 +18,9 @@ type ServiceAccountInfo struct {
 	Token		string
 }
 
-// CreateServiceAccountAndRoleBinding creates a ServiceAccount and a matching secret to use it.
+// CreateServiceAccountAndRoleBinding creates a ServiceAccount and a RoleBinding for it to use it.
+// If either of the two already exists, it will instead return their information to the caller
+// returns (InfoAboutServiceAccount, RoleBindingName, error)
 func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountInfo, string, error) {
 	name := getServiceAccountName()
 	namespace := GetActualNameSpaceNameByGitlabName(fullProjectPath)
