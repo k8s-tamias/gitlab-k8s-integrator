@@ -59,6 +59,10 @@ This does not touch namespaces unrelated to Gitlab (i.e. that do not match with 
         2. Delete RoleBindings for Members which are no longer present in the Gitlab Entity
         3. Adjust RoleBindings for Members whose Role has changed
     3. Create ceph-secret-user in the namespace, if ENV CEPH_USER_KEY has been set
+    4. (**Only for Projects**): 
+        1. For every project create a ServiceAccount and bind it to the role corresponding to the Master role in Gitlab.
+        2. Use the token associated with the ServiceAccount and setup the Kubernetes Integration Feature in Gitlab for the given project
+    
 
 #### Prevent namespace from being synced
 If you don't want a specific namespace to be synced with gitlab, just add a 'gitlab-ignored' label with an arbitrary value to
