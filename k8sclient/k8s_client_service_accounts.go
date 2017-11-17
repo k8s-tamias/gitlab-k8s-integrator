@@ -87,7 +87,7 @@ func createServiceAccountRoleBinding(saName, path string) string {
 		Subjects: []v1beta1.Subject{{Name: saName, Kind: "ServiceAccount", Namespace: ns}},
 		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
-	rb, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	if err != nil && k8serrors.IsNotFound(err) {
 		CreateNamespace(path)
 		_, err = getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
@@ -95,7 +95,7 @@ func createServiceAccountRoleBinding(saName, path string) string {
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Fatal("Communication with K8s Server threw error, while creating ServiceAccount RoleBinding. Err: " + err.Error())
 	}
-	return rb.Name
+	return rB.Name
 }
 
 func getServiceAccountName() string {
