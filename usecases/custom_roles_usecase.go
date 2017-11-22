@@ -2,12 +2,11 @@ package usecases
 
 import (
 	"io/ioutil"
-	"k8s.io/client-go/pkg/api"
-	_ "k8s.io/client-go/pkg/api/install"
-	_ "k8s.io/client-go/pkg/apis/extensions/install"
-	_ "k8s.io/client-go/pkg/apis/rbac/install"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
+	//_ "k8s.io/api"
+	_ "k8s.io/api/extensions/v1beta1"
+	//_ "k8s.io/client-go/pkg/apis/rbac/install"
+	"k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"log"
 	"os"
 	"regexp"
@@ -16,6 +15,7 @@ import (
 	"strings"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 type CustomRolesAndBindings struct {
@@ -69,19 +69,19 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 			for _, o := range objects {
 				switch o := o.(type) {
 
-				case *v1beta1.Role:
+				case *rbacv1.Role:
 					res.Roles[o.Name] = true
 					k8sclient.RbacV1beta1().Roles(o.Namespace).Create(o)
 					log.Printf("Applied Custom Role %s in Namespace %s", o.Name, o.Namespace)
-				case *v1beta1.RoleBinding:
+				case *rbacv1.RoleBinding:
 					res.RoleBindings[o.Name] = true
 					k8sclient.RbacV1beta1().RoleBindings(o.Namespace).Create(o)
 					log.Printf("Applied Custom RoleBinding %s in Namespace %s", o.Name, o.Namespace)
-				case *v1beta1.ClusterRole:
+				case *rbacv1.ClusterRole:
 					res.ClusterRoles[o.Name] = true
 					k8sclient.RbacV1beta1().ClusterRoles().Create(o)
 					log.Printf("Applied Custom ClusterRole %s", o.Name)
-				case *v1beta1.ClusterRoleBinding:
+				case *rbacv1.ClusterRoleBinding:
 					res.ClusterRoleBindings[o.Name] = true
 					k8sclient.RbacV1beta1().ClusterRoleBindings().Create(o)
 					log.Printf("Applied Custom ClusterRoleBinding %s", o.Name)
@@ -106,6 +106,8 @@ func getK8sClient() *kubernetes.Clientset {
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 
+
+
 	if check(err) {
 		log.Fatal(err)
 	}
@@ -124,7 +126,7 @@ func parseK8sYaml(fileR []byte) []runtime.Object {
 			continue
 		}
 
-		decode := api.Codecs.UniversalDeserializer().Decode
+		decode := scheme.Codecs.UniversalDeserializer().Decode
 		obj, groupVersionKind, err := decode([]byte(f), nil, nil)
 
 		if err != nil {

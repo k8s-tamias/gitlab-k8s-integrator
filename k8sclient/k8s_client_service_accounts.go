@@ -1,13 +1,13 @@
 package k8sclient
 
 import (
-	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"github.com/pkg/errors"
 	"log"
-	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"time"
 	"os"
 )
@@ -85,9 +85,9 @@ func createServiceAccountRoleBinding(saName, path string) string {
 	// ServiceAccounts are always bound to Master roles
 	rolename := GetProjectRoleName("Master")
 
-	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: saName, Namespace: ns},
-		Subjects: []v1beta1.Subject{{Name: saName, Kind: "ServiceAccount", Namespace: ns}},
-		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
+	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: saName, Namespace: ns},
+		Subjects: []rbacv1.Subject{{Name: saName, Kind: "ServiceAccount", Namespace: ns}},
+		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
 	if err != nil && k8serrors.IsNotFound(err) {
