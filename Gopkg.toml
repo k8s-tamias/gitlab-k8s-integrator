@@ -26,12 +26,12 @@
   version = "0.8.0"
 
 [[constraint]]
-  branch = "release-1.7"
+  branch = "release-1.8"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
   name = "k8s.io/client-go"
-  version = "4.0.0"
+  version = "5.0.1"
 
 [[constraint]]
   name = "github.com/peterhellberg/link"

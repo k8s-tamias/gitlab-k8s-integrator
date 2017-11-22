@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"k8s.io/client-go/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/rest"
 )
 
 // Utils

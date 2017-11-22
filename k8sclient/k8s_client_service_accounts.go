@@ -1,13 +1,13 @@
 package k8sclient
 
 import (
-	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"github.com/pkg/errors"
 	"log"
-	"k8s.io/client-go/pkg/apis/rbac/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"time"
 	"os"
 )
@@ -29,11 +29,11 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 
 	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace}}
 
-	serviceAccount, err := client.ServiceAccounts(namespace).Create(sa)
+	serviceAccount, err := client.CoreV1().ServiceAccounts(namespace).Create(sa)
 
 	if k8serrors.IsAlreadyExists(err) {
 		// ServiceAccount already exists, so retrieve and use it
-		serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+		serviceAccount, err = client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			return ServiceAccountInfo{},"", err
 		}
@@ -42,7 +42,7 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 	}
 
 	// try to retrieve ServiceAccount once as the newly created one won't have the secret set
-	serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	serviceAccount, err = client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 	// The secret in the ServiceAccount is not created and linked immediately, so we have to wait for it
 	// to not wait indefinitely we use a timeout
 	timeout := time.After(30 * time.Second)
@@ -55,7 +55,7 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 			return ServiceAccountInfo{}, "", errors.New("ServiceAccount was created, but Secrets were empty!")
 
 		case <-tick:
-			serviceAccount, err = client.ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+			serviceAccount, err = client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 			if err != nil && !k8serrors.IsNotFound(err) {
 				return ServiceAccountInfo{},"", err
 			}
@@ -63,7 +63,7 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 	}
 
 	secretName := serviceAccount.Secrets[0].Name
-	saSecret, err := client.Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	saSecret, err := client.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	token := saSecret.Data["token"]
 	if len(token) <= 0 {
 		return ServiceAccountInfo{}, "", errors.New("The token field in the Secret's data was empty!")
@@ -85,14 +85,14 @@ func createServiceAccountRoleBinding(saName, path string) string {
 	// ServiceAccounts are always bound to Master roles
 	rolename := GetProjectRoleName("Master")
 
-	rB := v1beta1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: saName, Namespace: ns},
-		Subjects: []v1beta1.Subject{{Name: saName, Kind: "ServiceAccount", Namespace: ns}},
-		RoleRef:  v1beta1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
+	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: saName, Namespace: ns},
+		Subjects: []rbacv1.Subject{{Name: saName, Kind: "ServiceAccount", Namespace: ns}},
+		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
-	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	_, err := getK8sClient().RbacV1().RoleBindings(ns).Create(&rB)
 	if err != nil && k8serrors.IsNotFound(err) {
 		CreateNamespace(path)
-		_, err = getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+		_, err = getK8sClient().RbacV1().RoleBindings(ns).Create(&rB)
 	}
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Fatal("Communication with K8s Server threw error, while creating ServiceAccount RoleBinding. Err: " + err.Error())
