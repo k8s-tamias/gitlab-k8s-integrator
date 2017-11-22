@@ -19,10 +19,10 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 		Subjects: []rbacv1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
 		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
-	_, err := getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+	_, err := getK8sClient().RbacV1().RoleBindings(ns).Create(&rB)
 	if k8serrors.IsNotFound(err) {
 		CreateNamespace(path)
-		_, err = getK8sClient().RbacV1beta1().RoleBindings(ns).Create(&rB)
+		_, err = getK8sClient().RbacV1().RoleBindings(ns).Create(&rB)
 	}
 	if check(err) {
 		log.Fatal("Communication with K8s Server threw error, while creating RoleBinding. Err: " + err.Error())

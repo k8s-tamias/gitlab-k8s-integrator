@@ -71,19 +71,19 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 
 				case *rbacv1.Role:
 					res.Roles[o.Name] = true
-					k8sclient.RbacV1beta1().Roles(o.Namespace).Create(o)
+					k8sclient.RbacV1().Roles(o.Namespace).Create(o)
 					log.Printf("Applied Custom Role %s in Namespace %s", o.Name, o.Namespace)
 				case *rbacv1.RoleBinding:
 					res.RoleBindings[o.Name] = true
-					k8sclient.RbacV1beta1().RoleBindings(o.Namespace).Create(o)
+					k8sclient.RbacV1().RoleBindings(o.Namespace).Create(o)
 					log.Printf("Applied Custom RoleBinding %s in Namespace %s", o.Name, o.Namespace)
 				case *rbacv1.ClusterRole:
 					res.ClusterRoles[o.Name] = true
-					k8sclient.RbacV1beta1().ClusterRoles().Create(o)
+					k8sclient.RbacV1().ClusterRoles().Create(o)
 					log.Printf("Applied Custom ClusterRole %s", o.Name)
 				case *rbacv1.ClusterRoleBinding:
 					res.ClusterRoleBindings[o.Name] = true
-					k8sclient.RbacV1beta1().ClusterRoleBindings().Create(o)
+					k8sclient.RbacV1().ClusterRoleBindings().Create(o)
 					log.Printf("Applied Custom ClusterRoleBinding %s", o.Name)
 				case *v1.ServiceAccount:
 					res.ServiceAccounts[o.Name] = true

@@ -15,7 +15,7 @@ func DeleteNamespace(originalName string) {
 	client := getK8sClient()
 	correctNs := GetActualNameSpaceNameByGitlabName(originalName)
 	if correctNs != "" {
-		err := client.Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
+		err := client.CoreV1().Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
 		if check(err) {
 			log.Fatal("Deletion of Namespace failed with error: " + err.Error())
 		}
@@ -41,11 +41,11 @@ func CreateNamespace(name string) {
 		log.Fatal("Error while transforming gitlab name to k8s label: " + err.Error())
 	}
 	client := getK8sClient()
-	_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
+	_, err = client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 
 	// if the already present namespace does not have "gitlab-ignored" label, we will update it with a  gitlab-origin label
 	if k8serrors.IsAlreadyExists(err) {
-		ns, errGetNs := getK8sClient().Namespaces().Get(nsName, metav1.GetOptions{})
+		ns, errGetNs := getK8sClient().CoreV1().Namespaces().Get(nsName, metav1.GetOptions{})
 		if check(errGetNs) {
 			log.Fatal("Error while retrieving namespace. Error: " + errGetNs.Error())
 		}
@@ -53,7 +53,7 @@ func CreateNamespace(name string) {
 			// add label to already present namespace
 			patchContent := fmt.Sprintf(`{"metadata":{"labels":{"gitlab-origin":"%s"}}}`, labelName)
 			patchByteArray := []byte(patchContent)
-			_, errPatch := client.Namespaces().Patch(nsName, types.MergePatchType, patchByteArray)
+			_, errPatch := client.CoreV1().Namespaces().Patch(nsName, types.MergePatchType, patchByteArray)
 			if check(errPatch) {
 				log.Fatal("Error while Updating namespace. Error: " + errPatch.Error())
 			}
@@ -65,7 +65,7 @@ func CreateNamespace(name string) {
 			// it has gitlab-ignored label, so create new namespace with suffix counter
 			i++
 			nsName = nsName + "-" + strconv.Itoa(i)
-			_, err = client.Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
+			_, err = client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: nsName, Labels: map[string]string{"gitlab-origin": labelName}}})
 		}
 	}
 	log.Println(fmt.Sprintf("Succesfully created Namespace %s for Gitlab Ressource %s", nsName, name))
