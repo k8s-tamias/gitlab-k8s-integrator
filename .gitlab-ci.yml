@@ -37,6 +37,8 @@ buildAndTest:
 
 deploy:
   stage: dockerize
+  only:
+   - master
   image: nexus.informatik.haw-hamburg.de/docker:stable-dind
   services:
     - nexus.informatik.haw-hamburg.de/docker:stable-dind
