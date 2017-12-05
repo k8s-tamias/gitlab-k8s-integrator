@@ -176,6 +176,14 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 
 			// get expectedRoleBindings by retrieved Members
 			expectedRoleBindings := map[string]bool{}
+
+			// create or get ServiceAccount
+			_, roleBindingName, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
+			if err != nil {
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for a group. Err was: %s"), err)
+			}
+			expectedRoleBindings[roleBindingName] = true
+
 			for _, member := range group.Members {
 				if debugSync() {
 					log.Println("Processing member " + member.Name)
@@ -213,6 +221,10 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 		} else {
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(group.FullPath)
+			_, _, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
+			if err != nil {
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for a group. Err was: %s", err))
+			}
 			if debugSync() {
 				log.Println("Creating Namespace for " + group.FullPath)
 			}
