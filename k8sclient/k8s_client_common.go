@@ -37,6 +37,8 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 	correctName := ""
 
+	if gitlabOriginName == "kube-system" { return correctName }
+
 	client := getK8sClient()
 
 	k8sName, err := GitlabNameToK8sLabel(gitlabOriginName)

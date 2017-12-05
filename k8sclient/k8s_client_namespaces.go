@@ -12,8 +12,12 @@ import (
 )
 
 func DeleteNamespace(originalName string) {
+
 	client := getK8sClient()
 	correctNs := GetActualNameSpaceNameByGitlabName(originalName)
+	if correctNs == "kube-system" {
+		return
+	}
 	if correctNs != "" {
 		err := client.CoreV1().Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
 		if check(err) {
@@ -23,6 +27,7 @@ func DeleteNamespace(originalName string) {
 }
 
 func CreateNamespace(name string) {
+	if name == "kube-system" { return }
 	// check if that namespace has already been created by either CreateProjectRoleBinding or CreateGroupRoleBinding
 	// this has been implemented due to the asynchronous manner in which the webhook calls might be received
 	// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
