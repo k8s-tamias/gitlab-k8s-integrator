@@ -223,7 +223,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			k8sclient.CreateNamespace(group.FullPath)
 			_, _, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
 			if err != nil {
-				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for a group. Err was: %s", err))
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath ,err))
 			}
 			if debugSync() {
 				log.Println("Creating Namespace for " + group.FullPath)
