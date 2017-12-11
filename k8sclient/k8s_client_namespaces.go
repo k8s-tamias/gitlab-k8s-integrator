@@ -64,7 +64,7 @@ func CreateNamespace(name string) {
 			}
 		}
 	} else {
-		log.Println(fmt.Sprintf("Namespace creation caused an error, which was not IsAlreadyExists. Error was: %s", err))
+		if err != nil { log.Println(fmt.Sprintf("Namespace creation caused an error, which was not IsAlreadyExists. Error was: %s", err)) }
 		// if error is due to namespace name collision, retry with suffixed number
 		i := 0
 		for k8serrors.IsAlreadyExists(err) {
