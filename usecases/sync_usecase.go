@@ -180,7 +180,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			// create or get ServiceAccount
 			_, roleBindingName, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
 			if err != nil {
-				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for a group. Err was: %s"), err)
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath ,err))
 			}
 			expectedRoleBindings[roleBindingName] = true
 
