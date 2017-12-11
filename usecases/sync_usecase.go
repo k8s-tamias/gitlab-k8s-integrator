@@ -160,9 +160,12 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 	defer syncDoneWg.Done()
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
+		if group.FullPath == "kube-system" { continue }  // ignore kube-system group
+
 		if debugSync() {
 			log.Println("Syncing: " + group.FullPath)
 		}
+
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(group.FullPath)
 		if debugSync() {
 			log.Println("ActualNamespace: " + actualNamespace)
