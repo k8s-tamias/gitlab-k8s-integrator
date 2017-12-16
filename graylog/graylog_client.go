@@ -26,7 +26,19 @@ type Rule struct {
 	Description string 	`json:"description"`
 }
 
-func createStream(namespaceName string) {
+type IndexSets struct {
+	Total		int			`json:"total"`
+	IndexSets	[]IndexSet  `json:"index_sets"`
+}
+
+type IndexSet struct {
+	Id 		string	`json:"id"`
+	Title 	string	`json:"title"`
+}
+
+func CreateStream(namespaceName string) {
+	if !isGrayLogActive() { return }
+
 	client := &http.Client{}
 	requestObject := Stream{
 		Title: namespaceName,
@@ -38,8 +50,10 @@ func createStream(namespaceName string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	req, err := http.NewRequest("POST", "https://icc-logging.informatik.haw-hamburg.de/api/streams",  bytes.NewBuffer(body))
+
+	req, err := http.NewRequest("POST", getGraylogBaseUrl()+"/api/streams",  bytes.NewBuffer(body))
 	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -54,14 +68,16 @@ func createStream(namespaceName string) {
 
 }
 
-func deleteStream(namespaceName string) {
+func DeleteStream(namespaceName string) {
 
 }
 
-func grantPermissionToStream(namespaceName, username string) {
+func GrantPermissionToStream(namespaceName, username string) {
 
 }
 
-func takePermissionToStream(namespaceName, username string) {
+func TakePermissionToStream(namespaceName, username string) {
 
 }
+
+
