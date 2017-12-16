@@ -21,14 +21,14 @@ type Stream struct {
 }
 
 type Rule struct {
-	Type 		int `json:"type"`
+	Type 		int 	`json:"type"`
 	Value 		string 	`json:"value"`
 	Field 		string	`json:"field"`
-	Inverted 	bool `json:"inverted"`
+	Inverted 	bool 	`json:"inverted"`
 	Description string 	`json:"description"`
 }
 
-type IndexSets struct {
+type IndexSets struct
 	Total		int			`json:"total"`
 	IndexSets	[]IndexSet  `json:"index_sets"`
 }
@@ -65,7 +65,7 @@ func CreateStream(namespaceName string) {
 		log.Fatal(err.Error())
 	}
 
-	req, err := http.NewRequest("POST", getGraylogBaseUrl()+"/api/streams",  bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, getGraylogBaseUrl()+"/api/streams",  bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -82,7 +82,15 @@ func CreateStream(namespaceName string) {
 	case 200:
 		var stream Stream
 		content, err := ioutil.ReadAll(resp.Body)
-		err := json.Unmarshal(content, stream)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		err = json.Unmarshal(content, stream)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
 		createRoleforStreamReaders(namespaceName, stream.Id)
 	case 403:
 		log.Println("Graylog communication failed due to permission denied for user.")
@@ -93,14 +101,13 @@ func CreateStream(namespaceName string) {
 }
 
 func createRoleforStreamReaders(namespaceName, streamId string){
-	if !isGrayLogActive() { return }
+	if !isGrayLogActive() || roleIsAlreadyPresent(namespaceName) { return }
 
 	client := &http.DefaultClient
 
-	// TODO: Check if role is already present
 
 	newRole := Role{
-		Name: namespaceName+"_readers",
+		Name: ,
 		Description: fmt.Sprintf("Role to allow users to read from stream %s", namespaceName),
 		Permissions: []string{fmt.Sprintf("streams:read:%s", streamId)},
 		ReadOnly: false,
@@ -182,4 +189,24 @@ func TakePermissionForStream(namespaceName, username string) {
 
 }
 
+func roleIsAlreadyPresent(namespaceName string) bool {
+	res := false
+	resp, err := http.Get(getGraylogBaseUrl()+"/roles/"+getRoleNameForNamespace(namespaceName))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
+	switch resp.StatusCode{
+	case 200:
+		res = true
+	case 404:
+		res = false
+	default:
+		log.Fatal(fmt.Sprintf("Query for Role failed with error. Statuscode was %s", resp.StatusCode))
+	}
+	return res
+}
+
+func getRoleNameForNamespace(namespaceName string) string {
+	return namespaceName+"_readers"
+}
