@@ -17,11 +17,22 @@ type Streams struct {
 
 type Stream struct {
 	Id                             string `json:"id"`
-	Title                          string `json:"Title"`
-	Description                    string `json:"Description"`
+	Title                          string `json:"title"`
+	Description                    string `json:"description"`
 	Rules                          []Rule `json:"rules"`
 	ContentPack                    string `json:"content_pack"`
 	MatchingType                   string `json:"matching_type"`
+	RemoveMatchesFromDefaultStream bool   `json:"remove_matches_from_default_stream"`
+	IndexSetId                     string `json:"index_set_id"`
+}
+
+type StreamId struct {
+	StreamId		string `json:"stream_id"`
+}
+
+type StreamCreate struct {
+	Title                          string `json:"title"`
+	Description                    string `json:"description"`
 	RemoveMatchesFromDefaultStream bool   `json:"remove_matches_from_default_stream"`
 	IndexSetId                     string `json:"index_set_id"`
 }
@@ -61,15 +72,21 @@ type Role struct {
 	ReadOnly    bool     `json:"read_only"`
 }
 
-func CreateStream(namespaceName string) {
+func CreateStream(namespaceName string) bool {
 	if !isGrayLogActive() {
-		return
+		return false
 	}
 
-	client := &http.DefaultClient
-	requestObject := Stream{
+	if isStreamAlreadyCreated(namespaceName) {
+		return true
+	}
+
+	client := http.DefaultClient
+	indexSetId := getIndexSetId()
+	requestObject := StreamCreate{
 		Title:                          namespaceName,
 		Description:                    fmt.Sprintf("Logs for namespace %s", namespaceName),
+		IndexSetId:						indexSetId,
 		RemoveMatchesFromDefaultStream: true,
 	}
 
@@ -92,26 +109,31 @@ func CreateStream(namespaceName string) {
 		log.Println(fmt.Sprintf("Error occured while calling Graylog for Stream creation. Error was: %s", err.Error()))
 	}
 
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	switch resp.StatusCode {
-	case 200:
-		var stream Stream
-		content, err := ioutil.ReadAll(resp.Body)
+	case 201:
+		var stream StreamId
+
+
+		err = json.Unmarshal(content, &stream)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
-		err = json.Unmarshal(content, stream)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		createRoleforStreamReaders(namespaceName, stream.Id)
+		createRoleforStreamReaders(namespaceName, stream.StreamId)
 		// start stream
-		startStream(stream.Id)
+		startStream(stream.StreamId)
+		return true
 	case 403:
 		log.Println("Graylog communication failed due to permission denied for user.")
+		return false
 	default:
-		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a stream. Code was: %d", resp.StatusCode))
+		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a stream. Code was: %d , message was: %s", resp.StatusCode,content))
+		return false
 	}
 }
 
@@ -120,7 +142,7 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 		return
 	}
 
-	client := &http.DefaultClient
+	client := http.DefaultClient
 
 	newRole := Role{
 		Name:        getRoleNameForNamespace(namespaceName),
@@ -135,7 +157,7 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 		log.Fatal(err.Error())
 	}
 
-	req, err := http.NewRequest(http.MethodPost, getGraylogBaseUrl()+"/roles", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, getGraylogBaseUrl()+"/api/roles", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -147,17 +169,24 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 	if err != nil {
 		log.Println(fmt.Sprintf("Error occured while calling Graylog for RoleCreation. Error was: %s", err.Error()))
 	}
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	switch resp.StatusCode {
 	case 200:
+
 	case 403:
 		log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
+	default:
+		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a role for a stream. Code was: %d , message was: %s", resp.StatusCode, content))
 	}
 
 }
 
 func startStream(streamId string) {
-	client := &http.DefaultClient
+	client := http.DefaultClient
 	req, err := http.NewRequest(http.MethodPost, getGraylogBaseUrl()+fmt.Sprintf("/api/streams/%s/resume", streamId), nil)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -191,7 +220,7 @@ func DeleteStream(namespaceName string) {
 
 	streamId := stream.Id
 
-	client := &http.DefaultClient
+	client := http.DefaultClient
 
 	req, err := http.NewRequest(http.MethodDelete, getGraylogBaseUrl()+fmt.Sprintf("/api/streams/%s", streamId), nil)
 	if err != nil {
@@ -215,12 +244,13 @@ func DeleteStream(namespaceName string) {
 }
 
 var grayLogStreams Streams
+const streamNotPresentMsg = "Stream not present in Graylog!"
 
 func getStreamByNamespaceName(namespaceName string) (*Stream, error) {
 	if contained, index := containsStream(grayLogStreams.StreamList, namespaceName); contained == true {
 		return &grayLogStreams.StreamList[index], nil
 	} else {
-		client := &http.DefaultClient
+		client := http.DefaultClient
 		req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/streams", nil)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -248,7 +278,19 @@ func getStreamByNamespaceName(namespaceName string) (*Stream, error) {
 			return &grayLogStreams.StreamList[index], nil
 		}
 	}
-	return nil, errors.New("Stream not present in Graylog!")
+	return nil, errors.New(streamNotPresentMsg)
+}
+
+func isStreamAlreadyCreated(namespaceName string) bool {
+	result := false
+	s, err := getStreamByNamespaceName(namespaceName)
+	if err != nil {
+		if err.Error() != streamNotPresentMsg {
+			log.Fatal(fmt.Sprintf("An error occured while communication with Graylog to determine whether a Stream is already present. Error was: %s", err.Error()))
+		}
+	}
+	if s != nil && err == nil { result = true }
+	return result
 }
 
 func containsStream(s []Stream, title string) (bool, int) {
@@ -357,25 +399,37 @@ func TakePermissionForStream(namespaceName, username string) {
 
 func roleIsAlreadyPresent(namespaceName string) bool {
 	res := false
-	resp, err := http.Get(getGraylogBaseUrl() + "/roles/" + getRoleNameForNamespace(namespaceName))
+
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl() + "/api/roles/" + getRoleNameForNamespace(namespaceName), nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
+	client := http.DefaultClient
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	switch resp.StatusCode {
 	case 200:
 		res = true
 	case 404:
 		res = false
 	default:
-		log.Fatal(fmt.Sprintf("Query for Role failed with error. Statuscode was %s", resp.StatusCode))
+		log.Fatal(fmt.Sprintf("Query for Role failed with error. Statuscode was %s, message was: %s", resp.StatusCode, content))
 	}
 	return res
 }
 
 func getRoleForNamespace(namespaceName string) (*Role, error) {
 	client := http.DefaultClient
-	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/roles/"+getRoleNameForNamespace(namespaceName), nil)
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/roles/"+getRoleNameForNamespace(namespaceName), nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
