@@ -26,7 +26,6 @@ import (
 	"strconv"
 )
 
-
 func GetFullGitlabContent() (*GitlabContent, error) {
 	groupUrl := getGitlabBaseUrl() + "groups"
 	foundGroups, err := GetAllGroups(make([]GitlabGroup, 0), groupUrl)
@@ -248,8 +247,6 @@ func (p *GitlabProject) getMembers() error {
 	return nil
 }
 
-
-
 func performGitlabHTTPRequest(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if check(err) {
@@ -261,5 +258,3 @@ func performGitlabHTTPRequest(url string) (*http.Response, error) {
 	return result, err
 
 }
-
-

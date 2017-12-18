@@ -1,9 +1,9 @@
 package gitlabclient
 
 import (
-	"os"
 	"fmt"
 	"log"
+	"os"
 )
 
 type GitlabGroup struct {
@@ -18,7 +18,7 @@ type GitlabProject struct {
 	Members           []Member
 	Links             Links     `json:"_links"`
 	Namespace         Namespace `json:"namespace"`
-	Path			  string    `json:"path"`
+	Path              string    `json:"path"`
 }
 
 type Namespace struct {
@@ -51,7 +51,6 @@ type GitlabContent struct {
 	Users    []GitlabUser
 }
 
-
 func contains(s []Member, e Member) bool {
 	for _, a := range s {
 		if a.Id == e.Id {
@@ -68,7 +67,6 @@ func check(err error) bool {
 	}
 	return false
 }
-
 
 func getGitlabBaseUrl() string {
 	apiVersion := os.Getenv("GITLAB_API_VERSION")

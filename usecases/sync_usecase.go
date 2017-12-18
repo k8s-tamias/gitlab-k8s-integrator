@@ -16,14 +16,14 @@
 package usecases
 
 import (
+	"fmt"
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/gitlabclient"
 	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/k8sclient"
 	"log"
 	"os"
-	"time"
-	"sync"
-	"fmt"
 	"strconv"
+	"sync"
+	"time"
 )
 
 /*
@@ -123,7 +123,7 @@ func PerformGlK8sSync() {
 	log.Println("Finished Synchronization run.")
 }
 
-func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup){
+func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup) {
 	defer syncDoneWg.Done()
 	for _, user := range gitlabContent.Users {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
@@ -156,11 +156,13 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 	}
 }
 
-func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup){
+func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBindings, syncDoneWg *sync.WaitGroup) {
 	defer syncDoneWg.Done()
 	// same same for Groups
 	for _, group := range gitlabContent.Groups {
-		if group.FullPath == "kube-system" { continue }  // ignore kube-system group
+		if group.FullPath == "kube-system" {
+			continue
+		} // ignore kube-system group
 
 		if debugSync() {
 			log.Println("Syncing: " + group.FullPath)
@@ -183,7 +185,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			// create or get ServiceAccount
 			_, roleBindingName, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
 			if err != nil {
-				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath ,err))
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath, err))
 			}
 			expectedRoleBindings[roleBindingName] = true
 
@@ -211,7 +213,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 
 			// 2.1 Iterate all roleBindings and delete those which are not anymore present in gitlab or in custom roles
 			for rb := range k8sRoleBindings {
-				if !expectedRoleBindings[rb] && !cRaB.RoleBindings[rb]{
+				if !expectedRoleBindings[rb] && !cRaB.RoleBindings[rb] {
 					if debugSync() {
 						log.Println("Deleting RoleBinding " + rb)
 					}
@@ -226,7 +228,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			k8sclient.CreateNamespace(group.FullPath)
 			_, _, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
 			if err != nil {
-				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath ,err))
+				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath, err))
 			}
 			if debugSync() {
 				log.Println("Creating Namespace for " + group.FullPath)

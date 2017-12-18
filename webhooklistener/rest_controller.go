@@ -56,7 +56,7 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// if GITLAB_SECRET_TOKEN env is set and is unequal to provided token, deny request
-		if getGitlabSecretToken() != "" && r.Header.Get("X-Gitlab-Token") != getGitlabSecretToken(){
+		if getGitlabSecretToken() != "" && r.Header.Get("X-Gitlab-Token") != getGitlabSecretToken() {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

@@ -127,8 +127,12 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 `
 	objects := parseK8sYaml([]byte(deployment))
-	if objects == nil { t.Error("result was nil")}
-	if len(objects) != 6 { t.Error("not enough objects deserialized")}
+	if objects == nil {
+		t.Error("result was nil")
+	}
+	if len(objects) != 6 {
+		t.Error("not enough objects deserialized")
+	}
 
 	var deployment2 = `
 apiVersion: v1
@@ -138,8 +142,12 @@ metadata:
   namespace: abb256
 `
 	objects = parseK8sYaml([]byte(deployment2))
-	if objects == nil { t.Error("result was nil")}
-	if len(objects) != 1 { t.Error("not enough objects deserialized")}
+	if objects == nil {
+		t.Error("result was nil")
+	}
+	if len(objects) != 1 {
+		t.Error("not enough objects deserialized")
+	}
 
 	var deployment3 = `
 apiVersion: v1
@@ -150,8 +158,12 @@ metadata:
 ---
 `
 	objects = parseK8sYaml([]byte(deployment3))
-	if objects == nil { t.Error("result was nil")}
-	if len(objects) != 1 { t.Error("not enough objects deserialized")}
+	if objects == nil {
+		t.Error("result was nil")
+	}
+	if len(objects) != 1 {
+		t.Error("not enough objects deserialized")
+	}
 
 	var deployment4 = `
 apiVersion: v1
@@ -177,6 +189,10 @@ subjects:
 
 ---`
 	objects = parseK8sYaml([]byte(deployment4))
-	if objects == nil { t.Error("result was nil")}
-	if len(objects) != 2 { t.Error("not enough objects deserialized")}
+	if objects == nil {
+		t.Error("result was nil")
+	}
+	if len(objects) != 2 {
+		t.Error("not enough objects deserialized")
+	}
 }

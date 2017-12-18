@@ -5,34 +5,34 @@ import (
 	//_ "k8s.io/api"
 	_ "k8s.io/api/extensions/v1beta1"
 	//_ "k8s.io/client-go/pkg/apis/rbac/install"
+	"fmt"
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"log"
 	"os"
 	"regexp"
-	"k8s.io/apimachinery/pkg/runtime"
-	"fmt"
 	"strings"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 type CustomRolesAndBindings struct {
-	Roles    				map[string]bool
-	RoleBindings 			map[string]bool
-	ClusterRoles 			map[string]bool
-	ClusterRoleBindings 	map[string]bool
-	ServiceAccounts 		map[string]bool
+	Roles               map[string]bool
+	RoleBindings        map[string]bool
+	ClusterRoles        map[string]bool
+	ClusterRoleBindings map[string]bool
+	ServiceAccounts     map[string]bool
 }
 
 func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 	res := CustomRolesAndBindings{
-		 Roles: 				make(map[string]bool),
-		 RoleBindings:			make(map[string]bool),
-		 ClusterRoles:			make(map[string]bool),
-		 ClusterRoleBindings: 	make(map[string]bool),
-		 ServiceAccounts:		make(map[string]bool),
+		Roles:               make(map[string]bool),
+		RoleBindings:        make(map[string]bool),
+		ClusterRoles:        make(map[string]bool),
+		ClusterRoleBindings: make(map[string]bool),
+		ServiceAccounts:     make(map[string]bool),
 	}
 
 	customDir := getCustomRoleDir()
@@ -63,7 +63,6 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 				log.Printf("An error occurred while reading file %s from directory %s. Err: %s", f.Name(), customDir, err)
 				return res
 			}
-
 
 			objects := parseK8sYaml(fileR)
 			for _, o := range objects {
@@ -106,8 +105,6 @@ func getK8sClient() *kubernetes.Clientset {
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 
-
-
 	if check(err) {
 		log.Fatal(err)
 	}
@@ -119,7 +116,7 @@ func parseK8sYaml(fileR []byte) []runtime.Object {
 	acceptedK8sTypes := regexp.MustCompile(`(Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount)`)
 	fileAsString := string(fileR[:])
 	sepYamlfiles := strings.Split(fileAsString, "---")
-	retVal := make([]runtime.Object,0, len(sepYamlfiles))
+	retVal := make([]runtime.Object, 0, len(sepYamlfiles))
 	for _, f := range sepYamlfiles {
 		if f == "\n" || f == "" {
 			// ignore empty cases

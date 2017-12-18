@@ -2,14 +2,14 @@ package k8sclient
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"log"
 	"os"
-	"strings"
 	"regexp"
-	"k8s.io/client-go/kubernetes"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"github.com/pkg/errors"
-	"k8s.io/client-go/rest"
+	"strings"
 )
 
 // Utils
@@ -37,7 +37,9 @@ func GetAllGitlabOriginNamesFromNamespacesWithOriginLabel() []string {
 func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 	correctName := ""
 
-	if gitlabOriginName == "kube-system" { return correctName }
+	if gitlabOriginName == "kube-system" {
+		return correctName
+	}
 
 	client := getK8sClient()
 

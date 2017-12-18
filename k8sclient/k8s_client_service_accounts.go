@@ -1,21 +1,21 @@
 package k8sclient
 
 import (
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"github.com/pkg/errors"
-	"log"
+	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"time"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+	"log"
 	"os"
+	"time"
 )
 
 type ServiceAccountInfo struct {
-	Name 		string
-	Namespace	string
-	Token		string
+	Name      string
+	Namespace string
+	Token     string
 }
 
 // CreateServiceAccountAndRoleBinding creates a ServiceAccount and a RoleBinding for it to use it.
@@ -35,7 +35,7 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 		// ServiceAccount already exists, so retrieve and use it
 		serviceAccount, err = client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
-			return ServiceAccountInfo{},"", err
+			return ServiceAccountInfo{}, "", err
 		}
 	} else if err != nil {
 		return ServiceAccountInfo{}, "", err
@@ -57,7 +57,7 @@ func CreateServiceAccountAndRoleBinding(fullProjectPath string) (ServiceAccountI
 		case <-tick:
 			serviceAccount, err = client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
 			if err != nil && !k8serrors.IsNotFound(err) {
-				return ServiceAccountInfo{},"", err
+				return ServiceAccountInfo{}, "", err
 			}
 		}
 	}
@@ -104,7 +104,7 @@ func getServiceAccountName() string {
 	name := os.Getenv("GITLAB_SERVICEACCOUNT_NAME")
 	if name == "" {
 		name = "gitlab-serviceaccount"
-	} else if errs := validation.IsDNS1123Label(name) ; len(errs) != 0 {
+	} else if errs := validation.IsDNS1123Label(name); len(errs) != 0 {
 		log.Fatalf("The provided value for GITLAB_SERVICEACCOUNT_NAME is not a DNS-1123 compliant name!")
 	}
 	return name

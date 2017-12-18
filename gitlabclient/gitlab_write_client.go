@@ -1,13 +1,13 @@
 package gitlabclient
 
 import (
-	"net/http"
-	"log"
-	"os"
-	"fmt"
-	"encoding/json"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 )
 
 func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
@@ -18,7 +18,7 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 		return
 	}
 
-	url := fmt.Sprintf("%sprojects/%s/services/kubernetes",getGitlabBaseUrl(),projectId)
+	url := fmt.Sprintf("%sprojects/%s/services/kubernetes", getGitlabBaseUrl(), projectId)
 
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	if err != nil {
@@ -26,7 +26,7 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	}
 
 	q := req.URL.Query()
-	q.Add("token",token)
+	q.Add("token", token)
 	q.Add("namespace", namespace)
 	q.Add("api_url", k8sUrl)
 
@@ -62,17 +62,16 @@ type Msg struct {
 	Slug []string
 }
 
-
-func setupEnvironment(projectId string){
+func setupEnvironment(projectId string) {
 	envName := "icc-dev"
-	url := fmt.Sprintf("%sprojects/%s/environments",getGitlabBaseUrl(),projectId)
+	url := fmt.Sprintf("%sprojects/%s/environments", getGitlabBaseUrl(), projectId)
 	values := map[string]string{"id": projectId, "name": envName}
 	jsonValue, err := json.Marshal(values)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost,url, bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonValue))
 	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
 	req.Header.Add("Content-Type", "application/json")
 
@@ -100,4 +99,3 @@ func setupEnvironment(projectId string){
 		log.Println(fmt.Sprintf("Creation of environment failed with http error %d, projectID was: %s", resp.StatusCode, projectId))
 	}
 }
-

@@ -2,13 +2,13 @@ package k8sclient
 
 import (
 	"fmt"
-	"strconv"
-	"log"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"log"
 	"os"
+	"strconv"
 )
 
 func DeleteNamespace(originalName string) {
@@ -27,7 +27,9 @@ func DeleteNamespace(originalName string) {
 }
 
 func CreateNamespace(name string) {
-	if name == "kube-system" { return }
+	if name == "kube-system" {
+		return
+	}
 	// check if that namespace has already been created by either CreateProjectRoleBinding or CreateGroupRoleBinding
 	// this has been implemented due to the asynchronous manner in which the webhook calls might be received
 	// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
@@ -64,7 +66,9 @@ func CreateNamespace(name string) {
 			}
 		}
 	} else {
-		if err != nil { log.Println(fmt.Sprintf("Namespace creation caused an error, which was not IsAlreadyExists. Error was: %s", err)) }
+		if err != nil {
+			log.Println(fmt.Sprintf("Namespace creation caused an error, which was not IsAlreadyExists. Error was: %s", err))
+		}
 		// if error is due to namespace name collision, retry with suffixed number
 		i := 0
 		for k8serrors.IsAlreadyExists(err) {
@@ -101,6 +105,3 @@ func DeployCEPHSecretUser(namespace string) {
 		}
 	}
 }
-
-
-
