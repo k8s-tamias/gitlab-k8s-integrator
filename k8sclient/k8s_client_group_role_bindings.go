@@ -62,8 +62,14 @@ func DeleteGroupRoleBinding(username, path, accessLevel string) {
 }
 
 func DeleteGroupRoleBindingByName(roleBindingName, actualNamespace string) {
-	err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
-	if check(err) {
-		log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
+	ns, errGetNs := getK8sClient().CoreV1().Namespaces().Get(actualNamespace, metav1.GetOptions{})
+	if check(errGetNs) {
+		log.Fatal("Error while retrieving namespace. Error: " + errGetNs.Error())
+	}
+	if ns.Labels["gitlab-ignored"] == "" {
+		err := getK8sClient().RbacV1beta1().RoleBindings(actualNamespace).Delete(roleBindingName, &metav1.DeleteOptions{})
+		if check(err) {
+			log.Println("WARNING: Communication with K8s Server threw error, while deleting RoleBinding. Err: " + err.Error())
+		}
 	}
 }

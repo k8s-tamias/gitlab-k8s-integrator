@@ -133,3 +133,21 @@ func isStillValid(validUntil string) bool {
 	}
 	return t.After(time.Now().Add(time.Minute * 5))
 }
+
+func contains(s []string, e string) (bool, int) {
+	for i, a := range s {
+		if a == e {
+			return true, i
+		}
+	}
+	return false, 0
+}
+
+func containsStream(s []Stream, title string) (bool, int) {
+	for i, a := range s {
+		if a.Title == title {
+			return true, i
+		}
+	}
+	return false, 0
+}
