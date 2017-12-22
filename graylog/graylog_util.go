@@ -26,13 +26,13 @@ func getIndexSetId() string {
 
 	client := http.DefaultClient
 
-	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl() + "/api/system/indices/index_sets", nil)
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/system/indices/index_sets", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
@@ -129,7 +129,7 @@ func isStillValid(validUntil string) bool {
 	str := strings.Replace(validUntil, "+0000", "Z", 1)
 	t, err := time.Parse(time.RFC3339Nano, str)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Error while Parsing timestamp %s. Error was: %s",validUntil,err))
+		log.Fatal(fmt.Sprintf("Error while Parsing timestamp %s. Error was: %s", validUntil, err))
 	}
 	return t.After(time.Now().Add(time.Minute * 5))
 }

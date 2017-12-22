@@ -1,24 +1,26 @@
 package graylog
 
 import (
-	"net/http"
-	"io/ioutil"
-	"fmt"
-	"log"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 var grayLogStreams Streams
+
 const streamNotPresentMsg = "Stream not present in Graylog!"
 
- /*
+/*
 	AUTHN & AUTHZ RELATED
- */
+*/
 
 func createRoleforStreamReaders(namespaceName, streamId string) {
-	if !isGrayLogActive() || roleIsAlreadyPresent(namespaceName) {
+	if !isGrayLogActive() || isRoleAlreadyPresent(namespaceName) {
+		log.Println(fmt.Sprintf("Readers role for names %s is already present, skipping.", namespaceName))
 		return
 	}
 
@@ -43,6 +45,7 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
@@ -55,7 +58,7 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 	}
 
 	switch resp.StatusCode {
-	case 200:
+	case 201:
 
 	case 403:
 		log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
@@ -65,14 +68,15 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 
 }
 
-func roleIsAlreadyPresent(namespaceName string) bool {
+func isRoleAlreadyPresent(namespaceName string) bool {
 	res := false
 
-	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl() + "/api/roles/" + getRoleNameForNamespace(namespaceName), nil)
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/roles/"+getRoleNameForNamespace(namespaceName), nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -102,6 +106,7 @@ func getRoleForNamespace(namespaceName string) (*Role, error) {
 		log.Fatal(err.Error())
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	roleResp, err := client.Do(req)
@@ -144,11 +149,12 @@ func getRoleNameForNamespace(namespaceName string) string {
 
 func getGraylogUser(username string) (*User, error) {
 	client := http.DefaultClient
-	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/users/"+username, nil)
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/users/"+username, nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	roleResp, err := client.Do(req)
@@ -171,6 +177,9 @@ func getGraylogUser(username string) (*User, error) {
 
 	case 404:
 		errMsg := fmt.Sprintf("Error user %s is not present. Please re-sync!", username)
+
+		// TODO: CREATE USER !!!
+
 		log.Println(errMsg)
 		return nil, errors.New(errMsg)
 
@@ -185,9 +194,14 @@ func getGraylogUser(username string) (*User, error) {
 	}
 }
 
+func createUser(username string) {
+	client := http.DefaultClient
+	client.Do()
+}
+
 /*
 	STREAM RELATED
- */
+*/
 
 func getStreamByNamespaceName(namespaceName string) (*Stream, error) {
 	if contained, index := containsStream(grayLogStreams.StreamList, namespaceName); contained == true {
@@ -211,6 +225,7 @@ func reloadStreams() {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
@@ -229,16 +244,20 @@ func reloadStreams() {
 	}
 }
 
-func isStreamAlreadyCreated(namespaceName string) bool {
+func isStreamAlreadyCreated(namespaceName string) (bool, string) {
 	result := false
+	id := ""
 	s, err := getStreamByNamespaceName(namespaceName)
 	if err != nil {
 		if err.Error() != streamNotPresentMsg {
 			log.Fatal(fmt.Sprintf("An error occured while communication with Graylog to determine whether a Stream is already present. Error was: %s", err.Error()))
 		}
 	}
-	if s != nil && err == nil { result = true }
-	return result
+	if err == nil && s.Id != "" {
+		result = true
+		id = s.Id
+	}
+	return result, id
 }
 
 func startStream(streamId string) {
@@ -249,6 +268,7 @@ func startStream(streamId string) {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)

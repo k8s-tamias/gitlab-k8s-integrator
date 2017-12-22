@@ -74,6 +74,7 @@ func setupEnvironment(projectId string) {
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonValue))
 	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

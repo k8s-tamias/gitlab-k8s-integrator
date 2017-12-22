@@ -26,7 +26,7 @@ type Stream struct {
 }
 
 type StreamId struct {
-	StreamId		string `json:"stream_id"`
+	StreamId string `json:"stream_id"`
 }
 
 type StreamCreate struct {
@@ -55,7 +55,7 @@ type IndexSet struct {
 }
 
 type UserUpdate struct {
-	roles []string
+	Roles []string `json:"roles"`
 }
 
 type User struct {
@@ -71,13 +71,13 @@ type Role struct {
 	ReadOnly    bool     `json:"read_only"`
 }
 
-func CreateStream(namespaceName string) bool {
+func CreateStream(namespaceName string) (bool, string) {
 	if !isGrayLogActive() {
-		return false
+		return false, ""
 	}
 
-	if isStreamAlreadyCreated(namespaceName) {
-		return true
+	if cond, id := isStreamAlreadyCreated(namespaceName); cond == true {
+		return true, id
 	}
 
 	client := http.DefaultClient
@@ -85,7 +85,7 @@ func CreateStream(namespaceName string) bool {
 	requestObject := StreamCreate{
 		Title:                          namespaceName,
 		Description:                    fmt.Sprintf("Logs for namespace %s", namespaceName),
-		IndexSetId:						indexSetId,
+		IndexSetId:                     indexSetId,
 		RemoveMatchesFromDefaultStream: true,
 	}
 
@@ -101,6 +101,7 @@ func CreateStream(namespaceName string) bool {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
@@ -117,7 +118,6 @@ func CreateStream(namespaceName string) bool {
 	case 201:
 		var stream StreamId
 
-
 		err = json.Unmarshal(content, &stream)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -126,13 +126,13 @@ func CreateStream(namespaceName string) bool {
 		createRoleforStreamReaders(namespaceName, stream.StreamId)
 		// start stream
 		startStream(stream.StreamId)
-		return true
+		return true, stream.StreamId
 	case 403:
 		log.Println("Graylog communication failed due to permission denied for user.")
-		return false
+		return false, ""
 	default:
-		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a stream. Code was: %d , message was: %s", resp.StatusCode,content))
-		return false
+		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a stream. Code was: %d , message was: %s", resp.StatusCode, content))
+		return false, ""
 	}
 }
 
@@ -156,6 +156,7 @@ func DeleteStream(namespaceName string) {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
 	req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 	resp, err := client.Do(req)
@@ -174,9 +175,10 @@ func DeleteStream(namespaceName string) {
 	}
 }
 
-func GrantPermissionForStream(namespaceName, username string) {
+func GrantPermissionForStream(namespaceName, username string) bool {
+	success := false
 	if !isGrayLogActive() {
-		return
+		return success
 	}
 
 	client := http.DefaultClient
@@ -184,18 +186,18 @@ func GrantPermissionForStream(namespaceName, username string) {
 	role, err := getRoleForNamespace(namespaceName)
 	if err != nil {
 		log.Println(fmt.Sprintf("Error occured while calling Graylog for retrieval of Role for Namespace. Error was: %s", err.Error()))
-		return
+		return success
 	}
 
 	user, err := getGraylogUser(username)
 	if err != nil {
 		log.Println(fmt.Sprintf("Error occured while calling Graylog for retrieval of User. Error was: %s", err.Error()))
-		return
+		return success
 	}
 
 	if contained, _ := contains(user.Roles, role.Name); contained == false {
 		updatedRoles := append(user.Roles, role.Name)
-		userup := UserUpdate{roles: updatedRoles}
+		userup := UserUpdate{Roles: updatedRoles}
 
 		body, err := json.Marshal(userup)
 
@@ -203,12 +205,13 @@ func GrantPermissionForStream(namespaceName, username string) {
 			log.Fatal(err.Error())
 		}
 
-		req, err := http.NewRequest(http.MethodPut, getGraylogBaseUrl()+"/users/"+username, bytes.NewBuffer(body))
+		req, err := http.NewRequest(http.MethodPut, getGraylogBaseUrl()+"/api/users/"+username, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
 		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
 		req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 		resp, err := client.Do(req)
@@ -217,16 +220,26 @@ func GrantPermissionForStream(namespaceName, username string) {
 		}
 
 		switch resp.StatusCode {
-		case 200:
+		case 204:
+			success = true
 		case 400:
 			log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
+			success = false
+
+		case 404:
+			success = false
 		}
+	} else {
+		success = true
 	}
+
+	return success
 }
 
-func TakePermissionForStream(namespaceName, username string) {
+func TakePermissionForStream(namespaceName, username string) bool {
+	success := false
 	if !isGrayLogActive() {
-		return
+		return success
 	}
 
 	client := http.DefaultClient
@@ -234,13 +247,13 @@ func TakePermissionForStream(namespaceName, username string) {
 	user, err := getGraylogUser(username)
 	if err != nil {
 		log.Println(fmt.Sprintf("Error occured while calling Graylog for retrieval of User. Error was: %s", err.Error()))
-		return
+		return success
 	}
 
 	if contained, index := contains(user.Roles, getRoleNameForNamespace(namespaceName)); contained == true {
-		// remove role from roles slice
+		// remove role from Roles slice
 		updatedRoles := append(user.Roles[:index], user.Roles[index+1:]...)
-		userup := UserUpdate{roles: updatedRoles}
+		userup := UserUpdate{Roles: updatedRoles}
 
 		body, err := json.Marshal(userup)
 
@@ -248,12 +261,13 @@ func TakePermissionForStream(namespaceName, username string) {
 			log.Fatal(err.Error())
 		}
 
-		req, err := http.NewRequest(http.MethodPut, getGraylogBaseUrl()+"/users/"+username, bytes.NewBuffer(body))
+		req, err := http.NewRequest(http.MethodPut, getGraylogBaseUrl()+"/api/users/"+username, bytes.NewBuffer(body))
 		if err != nil {
 			log.Fatal(err.Error())
 		}
 
 		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Accept", "application/json")
 		req.SetBasicAuth(getGraylogSessionToken(), "session")
 
 		resp, err := client.Do(req)
@@ -262,9 +276,15 @@ func TakePermissionForStream(namespaceName, username string) {
 		}
 
 		switch resp.StatusCode {
-		case 200:
+		case 204:
+			success = true
 		case 400:
 			log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
+			success = false
 		}
+	} else {
+		success = true
 	}
+	return success
 }
+
