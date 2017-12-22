@@ -98,35 +98,49 @@ func HandleGitlabEvent(body []byte) {
 	case "user_remove_from_team":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete RoleBinding for %s in %s as %s", event.UserUsername, event.ProjectPathWithNameSpace, event.ProjectAccess))
 		k8sclient.DeleteProjectRoleBinding(event.UserUsername, event.ProjectPathWithNameSpace, event.ProjectAccess)
+		actualNs := k8sclient.GetActualNameSpaceNameByGitlabName(event.ProjectPathWithNameSpace)
+		graylog.TakePermissionForStream(actualNs, event.UserUsername)
 
 		// group operations
-
 	case "group_create":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Creating Namespace for %s", event.Path))
-		k8sclient.CreateNamespace(event.Path)
+		createdNs := k8sclient.CreateNamespace(event.Path)
+		graylog.CreateStream(createdNs)
 
 	case "group_destroy":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Deleting Namespace for %s", event.Path))
-		k8sclient.DeleteNamespace(event.Path)
+		deletedNs := k8sclient.DeleteNamespace(event.Path)
+		graylog.DeleteStream(deletedNs)
 
 		// group member operations
 
 	case "user_add_to_group":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Create RoleBinding for %s in %s as %s", event.UserUsername, event.GroupPath, event.GroupAccess))
 		k8sclient.CreateGroupRoleBinding(event.UserUsername, event.GroupPath, event.GroupAccess)
+		actualNs := k8sclient.GetActualNameSpaceNameByGitlabName(event.GroupPath)
+		graylog.GrantPermissionForStream(actualNs, event.UserUsername)
 
 	case "user_remove_from_group":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete RoleBinding for %s in %s as %s", event.UserUsername, event.GroupPath, event.GroupAccess))
 		k8sclient.DeleteGroupRoleBinding(event.UserUsername, event.GroupPath, event.GroupAccess)
+		actualNs := k8sclient.GetActualNameSpaceNameByGitlabName(event.GroupPath)
+		graylog.TakePermissionForStream(actualNs, event.UserUsername)
 
 	case "user_create":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Create Namespace and RoleBinding for %s in %s as %s", event.UserCreatedUserName, event.UserCreatedUserName, event.ProjectAccess))
 		k8sclient.CreateNamespace(event.UserCreatedUserName)
 		k8sclient.CreateGroupRoleBinding(event.UserCreatedUserName, event.UserCreatedUserName, "Master")
+		actualNs := k8sclient.GetActualNameSpaceNameByGitlabName(event.UserCreatedUserName)
+		graylog.CreateStream(actualNs)
+		graylog.GrantPermissionForStream(actualNs, event.UserCreatedUserName)
 
 	case "user_destroy":
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Delete Namespace for %s", event.UserCreatedUserName))
 		k8sclient.DeleteNamespace(event.UserCreatedUserName)
+		k8sclient.DeleteGroupRoleBinding(event.UserCreatedUserName, event.UserCreatedUserName, "Master")
+		actualNs := k8sclient.GetActualNameSpaceNameByGitlabName(event.UserCreatedUserName)
+		graylog.DeleteStream(actualNs)
+		graylog.TakePermissionForStream(actualNs, event.UserCreatedUserName)
 
 	default:
 		log.Println(fmt.Sprintf("HOOK RECEIVED: Unknown Hook Type. Type was: %s", event.EventName))
