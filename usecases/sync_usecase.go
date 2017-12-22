@@ -140,11 +140,13 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 			for rb := range k8sRoleBindings {
 				if rb != expectedGitlabRolebindingName && !cRaB.RoleBindings[rb] {
 					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
+					graylog.TakePermissionForStream(actualNamespace, user.Username)
 				}
 			}
 			// make sure the project's role binding is present
 			if !k8sRoleBindings[expectedGitlabRolebindingName] {
 				k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
+				graylog.GrantPermissionForStream(actualNamespace, user.Username)
 			}
 
 			// finally check if namespace has CEPHSecretUser
@@ -154,6 +156,8 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 			// create Namespace & RoleBinding
 			k8sclient.CreateNamespace(user.Username)
 			k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
+			graylog.CreateStream(user.Username)
+			graylog.GrantPermissionForStream(user.Username, user.Username)
 		}
 	}
 }
@@ -210,6 +214,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 						log.Println("Creating RoleBinding " + rbName)
 					}
 					k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
+					graylog.GrantPermissionForStream(actualNamespace, member.Username)
 				}
 			}
 
@@ -222,12 +227,16 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 					k8sclient.DeleteGroupRoleBindingByName(rb, actualNamespace)
 				}
 			}
+
+			// TODO: Delete removed user roles from Graylog
+
 			// finally check if namespace has CEPHSecretUser
 			k8sclient.DeployCEPHSecretUser(actualNamespace)
 
 		} else {
 			// create Namespace & RoleBinding
-			k8sclient.CreateNamespace(group.FullPath)
+			actualNs := k8sclient.CreateNamespace(group.FullPath)
+			graylog.CreateStream(actualNs)
 			_, _, err := k8sclient.CreateServiceAccountAndRoleBinding(group.FullPath)
 			if err != nil {
 				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount for group %s. Err was: %s", group.FullPath, err))
@@ -238,6 +247,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			for _, member := range group.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
+				graylog.GrantPermissionForStream(actualNs, member.Username)
 			}
 		}
 	}
@@ -274,6 +284,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 				// make sure the project's expected rolebindings are present
 				if !k8sRoleBindings[rbName] {
 					k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+					graylog.GrantPermissionForStream(actualNamespace, member.Username)
 				}
 			}
 
@@ -285,11 +296,14 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 				}
 			}
 
+			// TODO: Delete removed user roles from Graylog
+
 			// finally check if namespace has CEPHSecretUser
 			k8sclient.DeployCEPHSecretUser(actualNamespace)
 		} else {
 			// create Namespace & RoleBinding
-			k8sclient.CreateNamespace(project.PathWithNameSpace)
+			actualNs := k8sclient.CreateNamespace(project.PathWithNameSpace)
+			graylog.CreateStream(actualNs)
 			serviceAccountInfo, _, err := k8sclient.CreateServiceAccountAndRoleBinding(project.PathWithNameSpace)
 			if err != nil {
 				log.Fatalln(fmt.Sprintf("A fatal error occurred while creating a ServiceAccount. Err was: %s", err))
@@ -301,6 +315,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			for _, member := range project.Members {
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
+				graylog.GrantPermissionForStream(actualNs, member.Username)
 			}
 
 		}
