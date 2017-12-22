@@ -60,6 +60,9 @@ func Main() {
 	go webhooklistener.Listen(quit)
 	go usecases.StartRecurringSyncTimer()
 	log.Println("Gitlab K8s Integrator listening!")
+
+	// Perform 1st sync now:
+	go usecases.PerformGlK8sSync()
 	// Wait until server signals quit
 	select {
 	case <-quit:
