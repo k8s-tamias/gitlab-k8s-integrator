@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/graylog"
 )
 
 /*
@@ -99,7 +100,8 @@ func PerformGlK8sSync() {
 		}
 
 		if delete {
-			k8sclient.DeleteNamespace(originalName)
+			actualNs := k8sclient.DeleteNamespace(originalName)
+			graylog.DeleteStream(actualNs)
 		}
 	}
 
