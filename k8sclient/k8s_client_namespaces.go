@@ -11,12 +11,12 @@ import (
 	"strconv"
 )
 
-func DeleteNamespace(originalName string) {
+func DeleteNamespace(originalName string) string {
 
 	client := getK8sClient()
 	correctNs := GetActualNameSpaceNameByGitlabName(originalName)
 	if correctNs == "kube-system" {
-		return
+		return correctNs
 	}
 	if correctNs != "" {
 		err := client.CoreV1().Namespaces().Delete(correctNs, &metav1.DeleteOptions{})
@@ -24,18 +24,19 @@ func DeleteNamespace(originalName string) {
 			log.Fatal("Deletion of Namespace failed with error: " + err.Error())
 		}
 	}
+	return correctNs
 }
 
-func CreateNamespace(name string) {
+func CreateNamespace(name string) string{
 	if name == "kube-system" {
-		return
+		return name
 	}
 	// check if that namespace has already been created by either CreateProjectRoleBinding or CreateGroupRoleBinding
 	// this has been implemented due to the asynchronous manner in which the webhook calls might be received
 	// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
 	// the correct one
 	if actualNs := GetActualNameSpaceNameByGitlabName(name); actualNs != "" {
-		return
+		return actualNs
 	}
 
 	nsName, err := GitlabNameToK8sNamespace(name)
@@ -83,6 +84,8 @@ func CreateNamespace(name string) {
 	DeployCEPHSecretUser(nsName)
 
 	check(err)
+
+	return nsName
 }
 
 func DeployCEPHSecretUser(namespace string) {

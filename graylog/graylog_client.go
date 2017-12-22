@@ -76,6 +76,7 @@ func CreateStream(namespaceName string) (bool, string) {
 		return false, ""
 	}
 
+
 	if cond, id := isStreamAlreadyCreated(namespaceName); cond == true {
 		return true, id
 	}
