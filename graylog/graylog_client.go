@@ -165,7 +165,8 @@ func DeleteStream(namespaceName string) {
 
 	switch resp.StatusCode {
 	case 204:
-		// stream deleted successfully
+		// stream deleted successfully, so reload local Stream cache
+		reloadStreams()
 	case 404:
 		log.Println(fmt.Sprintf("Error while deleting stream: Stream %s could not be found", streamId))
 	case 400:

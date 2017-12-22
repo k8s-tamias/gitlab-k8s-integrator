@@ -32,9 +32,9 @@ func TestGetStreamByNamespaceName(t *testing.T){
 	DeleteStream(namespaceName)
 }
 
-/*func TestDeleteStream(t *testing.T) {
+func TestDeleteStream(t *testing.T) {
 	done := CreateStream(namespaceName)
 	if !done {t.Fail()}
 	DeleteStream(namespaceName)
 	if isStreamAlreadyCreated(namespaceName) { t.Fail()}
-}*/
+}

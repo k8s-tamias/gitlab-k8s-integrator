@@ -193,35 +193,40 @@ func getStreamByNamespaceName(namespaceName string) (*Stream, error) {
 	if contained, index := containsStream(grayLogStreams.StreamList, namespaceName); contained == true {
 		return &grayLogStreams.StreamList[index], nil
 	} else {
-		client := http.DefaultClient
-		req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/streams", nil)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
 
-		req.Header.Add("Content-Type", "application/json")
-		req.SetBasicAuth(getGraylogSessionToken(), "session")
-
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Println(fmt.Sprintf("Error occured while calling Graylog for Stream Start. Error was: %s", err.Error()))
-		}
-
-		content, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		err = json.Unmarshal(content, &grayLogStreams)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		reloadStreams()
 
 		if contained, index := containsStream(grayLogStreams.StreamList, namespaceName); contained == true {
 			return &grayLogStreams.StreamList[index], nil
 		}
 	}
 	return nil, errors.New(streamNotPresentMsg)
+}
+
+func reloadStreams() {
+	client := http.DefaultClient
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/streams", nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured while calling Graylog for Stream Start. Error was: %s", err.Error()))
+	}
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = json.Unmarshal(content, &grayLogStreams)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func isStreamAlreadyCreated(namespaceName string) bool {
