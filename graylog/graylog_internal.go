@@ -76,9 +76,6 @@ func deleteRoleForStreamReaders(namespaceName string) {
 
 	client := http.DefaultClient
 
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 
 	req, err := http.NewRequest(http.MethodDelete, getGraylogBaseUrl()+"/api/roles/"+getRoleNameForNamespace(namespaceName), nil)
 	if err != nil {
