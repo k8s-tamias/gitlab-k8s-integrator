@@ -18,7 +18,7 @@ const streamNotPresentMsg = "Stream not present in Graylog!"
 	AUTHN & AUTHZ RELATED
 */
 
-func createRoleforStreamReaders(namespaceName, streamId string) {
+func createRoleForStreamReaders(namespaceName, streamId string) {
 	if !isGrayLogActive() || isRoleAlreadyPresent(namespaceName) {
 		log.Println(fmt.Sprintf("Readers role for names %s is already present, skipping.", namespaceName))
 		return
@@ -60,6 +60,47 @@ func createRoleforStreamReaders(namespaceName, streamId string) {
 	switch resp.StatusCode {
 	case 201:
 
+	case 403:
+		log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
+	default:
+		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a role for a stream. Code was: %d , message was: %s", resp.StatusCode, content))
+	}
+
+}
+
+func deleteRoleForStreamReaders(namespaceName string) {
+	if !isGrayLogActive() || !isRoleAlreadyPresent(namespaceName) {
+		log.Println(fmt.Sprintf("Readers role for names %s is already deleted, skipping.", namespaceName))
+		return
+	}
+
+	client := http.DefaultClient
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, getGraylogBaseUrl()+"/api/roles/"+getRoleNameForNamespace(namespaceName), nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured while calling Graylog for RoleCreation. Error was: %s", err.Error()))
+	}
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	switch resp.StatusCode {
+	case 204:
+		// success
 	case 403:
 		log.Println("Graylog communication for PermissionGrant on Stream failed due to permission denied for user.")
 	default:
@@ -192,11 +233,6 @@ func getGraylogUser(username string) (*User, error) {
 		log.Println(fmt.Sprintf("An unknown returncode was received when fetching User %s", username))
 		return nil, nil
 	}
-}
-
-func createUser(username string) {
-	client := http.DefaultClient
-	client.Do()
 }
 
 /*

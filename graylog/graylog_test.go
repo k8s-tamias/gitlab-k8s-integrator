@@ -88,6 +88,7 @@ func TestGrandAndTakePermissionForStream(t *testing.T) {
 	if !succesTake {
 		t.Fail()
 	}
+	DeleteStream(namespaceName)
 }
 
 func TestGetGraylogUser(t *testing.T) {

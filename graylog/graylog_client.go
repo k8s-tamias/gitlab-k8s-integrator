@@ -123,7 +123,7 @@ func CreateStream(namespaceName string) (bool, string) {
 			log.Fatal(err.Error())
 		}
 
-		createRoleforStreamReaders(namespaceName, stream.StreamId)
+		createRoleForStreamReaders(namespaceName, stream.StreamId)
 		// start stream
 		startStream(stream.StreamId)
 		return true, stream.StreamId
@@ -166,7 +166,8 @@ func DeleteStream(namespaceName string) {
 
 	switch resp.StatusCode {
 	case 204:
-		// stream deleted successfully, so reload local Stream cache
+		// stream deleted successfully, so delete role for it and reload local Stream cache
+		deleteRoleForStreamReaders(namespaceName)
 		reloadStreams()
 	case 404:
 		log.Println(fmt.Sprintf("Error while deleting stream: Stream %s could not be found", streamId))
