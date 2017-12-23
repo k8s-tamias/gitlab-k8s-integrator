@@ -85,6 +85,8 @@ func CreateStream(namespaceName string) (bool, string) {
 
 
 	if cond, id := isStreamAlreadyCreated(namespaceName); cond == true {
+		createRuleForNamespace(namespaceName, id)
+		createRoleForStreamReaders(namespaceName, id)
 		return true, id
 	}
 
