@@ -133,6 +133,7 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 
 			// make sure graylog Stream exists by making a create-call once
 			graylog.CreateStream(actualNamespace)
+			graylog.GrantPermissionForStream(actualNamespace, user.Username)
 
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
@@ -149,7 +150,6 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 			// make sure the project's role binding is present
 			if !k8sRoleBindings[expectedGitlabRolebindingName] {
 				k8sclient.CreateGroupRoleBinding(user.Username, user.Username, "Master")
-				graylog.GrantPermissionForStream(actualNamespace, user.Username)
 			}
 
 			// finally check if namespace has CEPHSecretUser
@@ -203,6 +203,8 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			expectedRoleBindings[roleBindingName] = true
 
 			for _, member := range group.Members {
+				graylog.GrantPermissionForStream(actualNamespace, member.Username)
+
 				if debugSync() {
 					log.Println("Processing member " + member.Name)
 				}
@@ -221,7 +223,6 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 						log.Println("Creating RoleBinding " + rbName)
 					}
 					k8sclient.CreateGroupRoleBinding(member.Username, group.FullPath, accessLevel)
-					graylog.GrantPermissionForStream(actualNamespace, member.Username)
 				}
 			}
 
@@ -286,6 +287,8 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
 
 			for _, member := range project.Members {
+				graylog.GrantPermissionForStream(actualNamespace, member.Username)
+
 				accessLevel := gitlabclient.TranslateIntAccessLevels(member.AccessLevel)
 				roleName := k8sclient.GetProjectRoleName(accessLevel)
 				rbName := k8sclient.ConstructRoleBindingName(member.Username, roleName, actualNamespace)
@@ -294,7 +297,6 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 				// make sure the project's expected rolebindings are present
 				if !k8sRoleBindings[rbName] {
 					k8sclient.CreateProjectRoleBinding(member.Username, project.PathWithNameSpace, accessLevel)
-					graylog.GrantPermissionForStream(actualNamespace, member.Username)
 				}
 			}
 
