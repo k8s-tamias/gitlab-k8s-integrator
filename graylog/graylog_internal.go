@@ -18,9 +18,60 @@ const streamNotPresentMsg = "Stream not present in Graylog!"
 	AUTHN & AUTHZ RELATED
 */
 
+func createRuleForNamespace(namespaceName, streamId string){
+	newRule := Rule{
+		Field: "kubernetes",
+		Description: "Filter Rule for this Namespace",
+		Type: 6,
+		Inverted: false,
+		Value: fmt.Sprint("\"namespace_name\":\"%s\"", namespaceName),
+	}
+
+	if !isGrayLogActive() || isRuleAlreadyPresent(namespaceName, streamId, newRule) {
+		log.Println(fmt.Sprintf("Rule for namespace %s is already present, skipping.", namespaceName))
+		return
+	}
+
+	client := http.DefaultClient
+
+
+	body, err := json.Marshal(newRule)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, err := http.NewRequest(http.MethodPost, getGraylogBaseUrl()+"/api/streams/"+streamId+"/rules", bytes.NewBuffer(body))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured while calling Graylog for RuleCreation. Error was: %s", err.Error()))
+	}
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	switch resp.StatusCode {
+	case 201:
+
+	case 403:
+		log.Println("Graylog communication for Rule Creation on Stream failed due to permission denied for user.")
+	default:
+		log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a Rule for a stream. Code was: %d , message was: %s", resp.StatusCode, content))
+	}
+}
+
 func createRoleForStreamReaders(namespaceName, streamId string) {
 	if !isGrayLogActive() || isRoleAlreadyPresent(namespaceName) {
-		log.Println(fmt.Sprintf("Readers role for names %s is already present, skipping.", namespaceName))
+		log.Println(fmt.Sprintf("Readers role for namespace %s is already present, skipping.", namespaceName))
 		return
 	}
 
@@ -70,7 +121,7 @@ func createRoleForStreamReaders(namespaceName, streamId string) {
 
 func deleteRoleForStreamReaders(namespaceName string) {
 	if !isGrayLogActive() || !isRoleAlreadyPresent(namespaceName) {
-		log.Println(fmt.Sprintf("Readers role for names %s is already deleted, skipping.", namespaceName))
+		log.Println(fmt.Sprintf("Readers role for namespace %s is already deleted, skipping.", namespaceName))
 		return
 	}
 
@@ -106,6 +157,51 @@ func deleteRoleForStreamReaders(namespaceName string) {
 
 }
 
+func isRuleAlreadyPresent(namespaceName, streamId string, newRule Rule) bool {
+	res := false
+
+	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/streams/"+streamId+"/rules", nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth(getGraylogSessionToken(), "session")
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	switch resp.StatusCode {
+	case 200:
+		var rules Rules
+		err := json.Unmarshal(content, &rules)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if rules.Total > 0 {
+			for _, elem := range rules.StreamRules {
+				// type 6 is "contain"
+				if elem.Type == 6 && elem.Field == "kubernetes" && elem.Value == fmt.Sprint("\"namespace_name\":\"%s\"", namespaceName) {
+					res = true
+				}
+			}
+
+		}
+
+	case 404:
+		res = false
+	default:
+		log.Fatal(fmt.Sprintf("Query for Role failed with error. Statuscode was %s, message was: %s", resp.StatusCode, content))
+	}
+	return res
+}
+
 func isRoleAlreadyPresent(namespaceName string) bool {
 	res := false
 
@@ -136,6 +232,8 @@ func isRoleAlreadyPresent(namespaceName string) bool {
 	}
 	return res
 }
+
+
 
 func getRoleForNamespace(namespaceName string) (*Role, error) {
 	client := http.DefaultClient

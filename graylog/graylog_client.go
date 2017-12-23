@@ -36,6 +36,11 @@ type StreamCreate struct {
 	IndexSetId                     string `json:"index_set_id"`
 }
 
+type Rules struct {
+	Total 		int `json:"total"`
+	StreamRules []Rule `json:"stream_rules"`
+}
+
 type Rule struct {
 	Type        int    `json:"type"`
 	Value       string `json:"value"`
@@ -43,6 +48,8 @@ type Rule struct {
 	Inverted    bool   `json:"inverted"`
 	Description string `json:"description"`
 }
+
+
 
 type IndexSets struct {
 	Total     int        `json:"total"`
@@ -123,6 +130,8 @@ func CreateStream(namespaceName string) (bool, string) {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+
+		createRuleForNamespace(namespaceName, stream.StreamId)
 
 		createRoleForStreamReaders(namespaceName, stream.StreamId)
 		// start stream
