@@ -11,7 +11,7 @@ import (
 )
 
 func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
-	k8sUrl := os.Getenv("K8S_API_URL")
+	k8sUrl := os.Getenv("EXTERNAL_K8S_API_URL")
 	if k8sUrl == "" {
 		// abort if K8S_API_URL was not set
 		log.Println("K8S_API_URL was not set, skipping setup of K8s integration in Gitlab...")
