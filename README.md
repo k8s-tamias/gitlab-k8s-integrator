@@ -178,22 +178,24 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: gl-k8s-integrator
-  namespace: integration
+  namespace: icc-integration
 spec:
   replicas: 1
+  selector:
+      matchLabels:
+        service: gl-k8s-integrator
   template:
     metadata:
       labels:
         service: gl-k8s-integrator
     spec:
-      serviceAccount: gl-k8s-integrator
       volumes:
         - name: custom-roles
           configMap:
             name: custom-roles-and-bindings
       containers:
       - name: gl-k8s-integrator
-        image: my-gl-k8s-image:stable
+        image: yourImage:version
         ports:
         - containerPort: 8080
         volumeMounts:
@@ -201,19 +203,46 @@ spec:
           mountPath: /etc/custom-roles
         resources:
           requests:
-            cpu: 250m
-            memory: 250Mi
+            cpu: 100m
+            memory: 30Mi
         env:
         - name: ENABLE_GITLAB_HOOKS_DEBUG
           value: "false"
         - name: ENABLE_GITLAB_SYNC_DEBUG
           value: "false"
-        - name: GITLAB_HOSTNAME
-          value: "my-gitlab.example.com"
-        - name: GITLAB_API_VERSION
-          value: "v4"
         - name: ENABLE_SYNC_ENDPOINT
           value: "false"
+        - name: CUSTOM_ROLE_DIR
+          value: "/etc/custom-roles"
+        - name: GITLAB_HOSTNAME
+          value: "your.amazing.gitlab.example.com"
+        - name: GITLAB_API_VERSION
+          value: "v4"
+        - name: GITLAB_SERVICEACCOUNT_NAME
+          value: "gitlab-serviceaccount"
+        - name: K8S_API_URL
+          value: "kubernetes"
+        - name: EXTERNAL_K8S_API_URL
+          value: "https://awesome.external.k8s.example.com"
+        - name: GRAYLOG_BASE_URL
+          value: "http://graylog.logging.svc.cluster.local:9000"
+        - name: GRAYLOG_ADMIN_USER
+          value: "admin"
+        - name: GRAYLOG_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: graylog-admin-password-secret
+              key: pw
+        - name: K8S_CA_PEM
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-ca-pem
+              key: ca.pem
+        - name: GITLAB_SECRET_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-integrator-secret-token
+              key: token
         - name: GITLAB_PRIVATE_TOKEN
           valueFrom:
             secretKeyRef:
@@ -230,6 +259,22 @@ spec:
             port: 8080
           initialDelaySeconds: 10
           periodSeconds: 10
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gl-k8s-integrator
+  namespace: icc-integration
+  labels:
+    service: gl-k8s-integrator
+spec:
+  ports:
+  -   name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  selector:
+    service: gl-k8s-integrator
 ```
 
 The supported/allowed K8s object types are: Role|ClusterRole|RoleBinding|ClusterRoleBinding|ServiceAccount.
@@ -250,10 +295,14 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |GITLAB_SECRET_TOKEN| no | The secret token which can be set in Gitlab System Hooks to validate the request on our side
 |GITLAB_SERVICEACCOUNT_NAME| no | Must be DNS-1123 compliant! If set it will override the name of the default service account created in each namespace
 |CEPH_USER_KEY| no (default: gitlab-serviceaccount) | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
-|K8S_API_URL| no | If set, will be written to the kubernetes service integration for any project
+|K8S_API_URL| yes | The URL where the K8s API server is reachable from the gl-k8s-integrator. In-Cluster would be "kubernetes" on a typical setup 
+|EXTERNAL_K8S_API_URL | no | If set, will be written to the kubernetes service integration for any project
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no
 |ENABLE_GITLAB_SYNC_DEBUG| no| If set to 'true' the sync process will output debug info
+|GRAYLOG_BASE_URL | no | If set will enable the Graylog Integration
+|GRAYLOG_ADMIN_USER | yes, if above is set | Admin user to use for Graylog integration API calls
+|GRAYLOG_ADMIN_PASSWORD| yes, if above is set |Admin user's password
 
 ### Roles and Permissions
 
