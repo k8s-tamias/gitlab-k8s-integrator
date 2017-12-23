@@ -131,6 +131,9 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(user.Username)
 		if actualNamespace != "" {
 
+			// make sure graylog Stream exists by making a create-call once
+			graylog.CreateStream(actualNamespace)
+
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
 			roleName := k8sclient.GetGroupRoleName("Master")
@@ -179,6 +182,10 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 			log.Println("ActualNamespace: " + actualNamespace)
 		}
 		if actualNamespace != "" {
+
+			// make sure graylog Stream exists by making a create-call once
+			graylog.CreateStream(actualNamespace)
+
 			// namespace is present, check rolebindings
 			k8sRoleBindings := k8sclient.GetRoleBindingsByNamespace(actualNamespace)
 			if debugSync() {
@@ -258,6 +265,9 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 	for _, project := range gitlabContent.Projects {
 		actualNamespace := k8sclient.GetActualNameSpaceNameByGitlabName(project.PathWithNameSpace)
 		if actualNamespace != "" {
+
+			// make sure graylog Stream exists by making a create-call once
+			graylog.CreateStream(actualNamespace)
 
 			// get expectedRoleBindings by retrieved Members
 			expectedRoleBindings := map[string]bool{}
