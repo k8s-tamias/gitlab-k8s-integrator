@@ -24,7 +24,7 @@ func createRuleForNamespace(namespaceName, streamId string){
 		Description: "Filter Rule for this Namespace",
 		Type: 6,
 		Inverted: false,
-		Value: fmt.Sprint("\"namespace_name\":\"%s\"", namespaceName),
+		Value: fmt.Sprintf("\"namespace_name\":\"%s\"", namespaceName),
 	}
 
 	if !isGrayLogActive() || isRuleAlreadyPresent(namespaceName, streamId, newRule) {
@@ -187,7 +187,7 @@ func isRuleAlreadyPresent(namespaceName, streamId string, newRule Rule) bool {
 		if rules.Total > 0 {
 			for _, elem := range rules.StreamRules {
 				// type 6 is "contain"
-				if elem.Type == 6 && elem.Field == "kubernetes" && elem.Value == fmt.Sprint("\"namespace_name\":\"%s\"", namespaceName) {
+				if elem.Type == newRule.Type && elem.Field == newRule.Field && elem.Value == newRule.Value {
 					res = true
 				}
 			}
