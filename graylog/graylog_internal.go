@@ -27,7 +27,7 @@ func createRuleForNamespace(namespaceName, streamId string){
 		Value: fmt.Sprintf("\"namespace_name\":\"%s\"", namespaceName),
 	}
 
-	if !isGrayLogActive() || isRuleAlreadyPresent(namespaceName, streamId, newRule) {
+	if !isGrayLogActive() || isRuleAlreadyPresent(streamId, newRule) {
 		log.Println(fmt.Sprintf("Rule for namespace %s is already present, skipping.", namespaceName))
 		return
 	}
@@ -157,7 +157,7 @@ func deleteRoleForStreamReaders(namespaceName string) {
 
 }
 
-func isRuleAlreadyPresent(namespaceName, streamId string, newRule Rule) bool {
+func isRuleAlreadyPresent(streamId string, newRule Rule) bool {
 	res := false
 
 	req, err := http.NewRequest(http.MethodGet, getGraylogBaseUrl()+"/api/streams/"+streamId+"/rules", nil)
@@ -233,7 +233,41 @@ func isRoleAlreadyPresent(namespaceName string) bool {
 	return res
 }
 
+func DeleteAllRulesForAllStreams(){
+	reloadStreams()
+	for _, s := range grayLogStreams.StreamList {
+		for _, rule := range s.Rules {
+			client := http.DefaultClient
 
+			req, err := http.NewRequest(http.MethodDelete, getGraylogBaseUrl()+"/api/streams/"+s.Id+"/rules/"+rule.Id, nil)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Accept", "application/json")
+			req.SetBasicAuth(getGraylogSessionToken(), "session")
+
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Println(fmt.Sprintf("Error occured while calling Graylog for Rule Deletion. Error was: %s", err.Error()))
+			}
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			switch resp.StatusCode {
+			case 204:
+				// success
+			case 403:
+				log.Println("Graylog communication for Rule Creation on Stream failed due to permission denied for user.")
+			default:
+				log.Println(fmt.Sprintf("Graylog returned a not-OK status code when creating a Rule for a stream. Code was: %d , message was: %s", resp.StatusCode, content))
+			}
+		}
+	}
+}
 
 func getRoleForNamespace(namespaceName string) (*Role, error) {
 	client := http.DefaultClient

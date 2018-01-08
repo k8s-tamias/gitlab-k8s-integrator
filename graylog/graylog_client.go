@@ -42,6 +42,7 @@ type Rules struct {
 }
 
 type Rule struct {
+	Id 			 string `json:"id"`
 	Type        int    `json:"type"`
 	Value       string `json:"value"`
 	Field       string `json:"field"`
