@@ -85,7 +85,7 @@ func ConstructRoleBindingName(username, rolename, ns string) string {
 func GetProjectRoleName(accessLevel string) string {
 	var rname string
 	switch accessLevel {
-	case "Master":
+	case "Master","Owner":
 		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-master"
@@ -113,7 +113,7 @@ func GetProjectRoleName(accessLevel string) string {
 func GetGroupRoleName(accessLevel string) string {
 	var rname string
 	switch accessLevel {
-	case "Master":
+	case "Master","Owner":
 		rname = os.Getenv("GROUP_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-master"
