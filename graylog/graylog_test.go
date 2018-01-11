@@ -1,5 +1,5 @@
 package graylog
-
+/*
 import (
 	"os"
 	"testing"
@@ -9,11 +9,11 @@ const namespaceName = "test-18F81907-7C88-438E-A648-2069EF5B95B2"
 const userName = "testaccount"
 
 func TestMain(m *testing.M) {
-	/*
+
 	os.Setenv("GRAYLOG_BASE_URL", "")
 	os.Setenv("GRAYLOG_ADMIN_USER", "")
 	os.Setenv("GRAYLOG_ADMIN_PASSWORD", "")
-	*/
+
 	ret := m.Run()
 	os.Exit(ret)
 }
@@ -110,3 +110,4 @@ func TestGetGraylogUser(t *testing.T) {
 	}
 
 }
+*/
