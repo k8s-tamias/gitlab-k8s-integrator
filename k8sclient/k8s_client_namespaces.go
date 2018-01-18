@@ -123,13 +123,13 @@ func DeployGPUServiceAccountAndRoleBinding(namespace string){
 
 	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "gpu-serviceaccount", Namespace: namespace}}
 
-	serviceAccount, err := client.CoreV1().ServiceAccounts(namespace).Create(sa)
+	_, err := client.CoreV1().ServiceAccounts(namespace).Create(sa)
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Fatalln("Error creating GPU ServiceAccount. Error: " + err.Error())
 	}
 
 	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "gpu-psp-binding", Namespace: namespace},
-		Subjects: []rbacv1.Subject{{Name: serviceAccount.Name, Kind: "ServiceAccount"}},
+		Subjects: []rbacv1.Subject{{Name: sa.Name, Kind: "ServiceAccount"}},
 		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: clusterRoleName, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err = client.RbacV1().RoleBindings(namespace).Create(&rB)
