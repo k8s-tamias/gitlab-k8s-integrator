@@ -154,6 +154,7 @@ func syncUsers(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBin
 
 			// finally check if namespace has CEPHSecretUser
 			k8sclient.DeployCEPHSecretUser(actualNamespace)
+			k8sclient.DeployGPUServiceAccountAndRoleBinding(actualNamespace)
 
 		} else {
 			// create Namespace & RoleBinding
@@ -240,6 +241,7 @@ func syncGroups(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAndBi
 
 			// finally check if namespace has CEPHSecretUser
 			k8sclient.DeployCEPHSecretUser(actualNamespace)
+			k8sclient.DeployGPUServiceAccountAndRoleBinding(actualNamespace)
 
 		} else {
 			// create Namespace & RoleBinding
@@ -312,6 +314,7 @@ func syncProjects(gitlabContent *gitlabclient.GitlabContent, cRaB CustomRolesAnd
 
 			// finally check if namespace has CEPHSecretUser
 			k8sclient.DeployCEPHSecretUser(actualNamespace)
+			k8sclient.DeployGPUServiceAccountAndRoleBinding(actualNamespace)
 		} else {
 			// create Namespace & RoleBinding
 			actualNs := k8sclient.CreateNamespace(project.PathWithNameSpace)
