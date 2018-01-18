@@ -16,7 +16,7 @@ func CreateProjectRoleBinding(username, path, accessLevel string) {
 	rolename := GetProjectRoleName(accessLevel)
 
 	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: ConstructRoleBindingName(username, rolename, ns), Namespace: ns},
-		Subjects: []rbacv1.Subject{{Name: username, Kind: "User", APIGroup: "rbac.authorization.k8s.io"}},
+		Subjects: []rbacv1.Subject{{Name: username, Kind: "User"}},
 		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: rolename, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err := getK8sClient().RbacV1().RoleBindings(ns).Create(&rB)

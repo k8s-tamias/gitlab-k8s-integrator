@@ -129,7 +129,7 @@ func DeployGPUServiceAccountAndRoleBinding(namespace string){
 	}
 
 	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "gpu-psp-binding", Namespace: namespace},
-		Subjects: []rbacv1.Subject{{Name: serviceAccount.Name, Kind: "ServiceAccount", APIGroup: "rbac.authorization.k8s.io"}},
+		Subjects: []rbacv1.Subject{{Name: serviceAccount.Name, Kind: "ServiceAccount"}},
 		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: clusterRoleName, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err = client.RbacV1().RoleBindings(namespace).Create(&rB)
