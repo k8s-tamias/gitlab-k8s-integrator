@@ -303,6 +303,7 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |GRAYLOG_BASE_URL | no | If set will enable the Graylog Integration
 |GRAYLOG_ADMIN_USER | yes, if above is set | Admin user to use for Graylog integration API calls
 |GRAYLOG_ADMIN_PASSWORD| yes, if above is set |Admin user's password
+|GPU_PSP_CLUSTER_ROLE_NAME| no| If set, will enable creation of a gpu-serviceaccount and a corresponding RoleBinding, which allows to use the PodSecurityPolicy by the name set for the variable.
 
 ### Roles and Permissions
 

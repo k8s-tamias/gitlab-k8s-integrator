@@ -3,6 +3,7 @@ package k8sclient
 import (
 	"fmt"
 	"k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -80,8 +81,11 @@ func CreateNamespace(name string) string{
 		}
 	}
 	log.Println(fmt.Sprintf("Succesfully created Namespace %s for Gitlab Ressource %s", nsName, name))
-	// finally deploy CEPH Secret User if specified via ENV var
+	// deploy CEPH Secret User if specified via ENV var
 	DeployCEPHSecretUser(nsName)
+
+	// deploy GPU SA and RoleBinding
+	DeployGPUServiceAccountAndRoleBinding(nsName)
 
 	check(err)
 
@@ -106,5 +110,30 @@ func DeployCEPHSecretUser(namespace string) {
 		if err != nil && !k8serrors.IsAlreadyExists(err) {
 			log.Fatalln("Error creating CEPH Secret User. Error was: " + err.Error())
 		}
+	}
+}
+
+func DeployGPUServiceAccountAndRoleBinding(namespace string){
+	clusterRoleName := os.Getenv("GPU_PSP_CLUSTER_ROLE_NAME")
+	if clusterRoleName == "" {
+		return
+	}
+
+	client := getK8sClient()
+
+	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "gpu-serviceaccount", Namespace: namespace}}
+
+	serviceAccount, err := client.CoreV1().ServiceAccounts(namespace).Create(sa)
+	if err != nil {
+		log.Fatalln("Error creating GPU ServiceAccount. Error: " + err.Error())
+	}
+
+	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "gpu-psp-binding", Namespace: namespace},
+		Subjects: []rbacv1.Subject{{Name: serviceAccount.Name, Kind: "ServiceAccount", APIGroup: "rbac.authorization.k8s.io"}},
+		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: clusterRoleName, APIGroup: "rbac.authorization.k8s.io"}}
+
+	_, err = client.RbacV1().RoleBindings(namespace).Create(&rB)
+	if err != nil {
+		log.Fatalln("Error creating GPU ServiceAccount. Error: " + err.Error())
 	}
 }
