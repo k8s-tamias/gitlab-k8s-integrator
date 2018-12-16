@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: k8s-tamias/gitlab-k8s-integrator
-  tag: latest
+  repository: chrishuen/gitlab-k8s-integrator
+  tag: v1.0
   pullPolicy: IfNotPresent
 
 nameOverride: ""
