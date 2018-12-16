@@ -2,6 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/k8s-tamias/gitlab-k8s-integrator)](https://goreportcard.com/report/github.com/k8s-tamias/gitlab-k8s-integrator)
 [![GoDoc](https://godoc.org/github.com/k8s-tamias/gitlab-k8s-integrator?status.svg)](https://godoc.org/github.com/k8s-tamias/gitlab-k8s-integrator)
+[![Docker](https://img.shields.io/docker/pulls/chrishuen/gitlab-k8s-integrator.svg)](https://img.shields.io/docker/pulls/chrishuen/gitlab-k8s-integrator.svg)
 
 This service consumes Gitlab Webhook Calls and translates them into namespaces and roles in Kubernetes. Every Gitlab Group,
 Project and User Repository (Private Namespace) is turned into a namespace on Kubernetes.
