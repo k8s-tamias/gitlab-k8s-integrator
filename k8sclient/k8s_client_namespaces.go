@@ -2,16 +2,18 @@ package k8sclient
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
-	"os"
-	"strconv"
 )
 
+// DeleteNamespace deletes a namespace by its originalName
 func DeleteNamespace(originalName string) string {
 
 	client := getK8sClient()
@@ -26,16 +28,19 @@ func DeleteNamespace(originalName string) string {
 		}
 	}
 	return correctNs
+
 }
 
-func CreateNamespace(name string) string{
+// CreateNamespace creates a namespace. It
+// checks if that namespace has already been created by either CreateProjectRoleBinding or CreateGroupRoleBinding.
+// This has been implemented due to the asynchronous manner in which the webhook calls might be received.
+// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
+// the correct one.
+func CreateNamespace(name string) string {
 	if name == "kube-system" {
 		return name
 	}
-	// check if that namespace has already been created by either CreateProjectRoleBinding or CreateGroupRoleBinding
-	// this has been implemented due to the asynchronous manner in which the webhook calls might be received
-	// GetActualNameSpaceNameByGitlabName checks for the origin label field, so it only finds the namespace if it's
-	// the correct one
+
 	if actualNs := GetActualNameSpaceNameByGitlabName(name); actualNs != "" {
 		return actualNs
 	}
@@ -85,7 +90,9 @@ func CreateNamespace(name string) string{
 	DeployCEPHSecretUser(nsName)
 
 	// deploy GPU SA and RoleBinding
-	DeployGPUServiceAccountAndRoleBinding(nsName)
+	DeployAdditionalServiceAccounts(nsName)
+
+	CreateLimitRange(nsName)
 
 	check(err)
 
@@ -113,27 +120,30 @@ func DeployCEPHSecretUser(namespace string) {
 	}
 }
 
-func DeployGPUServiceAccountAndRoleBinding(namespace string){
-	clusterRoleName := os.Getenv("GPU_PSP_CLUSTER_ROLE_NAME")
-	if clusterRoleName == "" {
-		return
+func DeployAdditionalServiceAccounts(namespace string) {
+	netClusterRoleName := os.Getenv("NET_ADMIN_PSP_CLUSTER_ROLE_NAME")
+	if netClusterRoleName != "" {
+		deployServiceAccountAndRoleBinding(namespace, netClusterRoleName, "net-admin-serviceaccount", "net-admin-psp-binding")
 	}
+}
+
+func deployServiceAccountAndRoleBinding(namespace, clusterRoleName, serviceAccountName, bindingName string) {
 
 	client := getK8sClient()
 
-	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "gpu-serviceaccount", Namespace: namespace}}
+	sa := &v1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: serviceAccountName, Namespace: namespace}}
 
 	_, err := client.CoreV1().ServiceAccounts(namespace).Create(sa)
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		log.Fatalln("Error creating GPU ServiceAccount. Error: " + err.Error())
+		log.Fatalf("Error creating %s ServiceAccount. Error: %s", serviceAccountName, err.Error())
 	}
 
-	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: "gpu-psp-binding", Namespace: namespace},
+	rB := rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: namespace},
 		Subjects: []rbacv1.Subject{{Name: sa.Name, Kind: "ServiceAccount"}},
 		RoleRef:  rbacv1.RoleRef{Kind: "ClusterRole", Name: clusterRoleName, APIGroup: "rbac.authorization.k8s.io"}}
 
 	_, err = client.RbacV1().RoleBindings(namespace).Create(&rB)
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		log.Fatalln("Error creating GPU ServiceAccount. Error: " + err.Error())
+		log.Fatalf("Error creating %s ServiceAccount. Error: %s", serviceAccountName, err.Error())
 	}
 }

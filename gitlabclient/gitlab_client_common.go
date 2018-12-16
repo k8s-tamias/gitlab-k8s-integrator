@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+const UserStateBlocked = "blocked"
+
 type GitlabGroup struct {
 	Id       int
 	FullPath string `json:"full_path"`
@@ -35,6 +37,7 @@ type Links struct {
 
 type GitlabUser struct {
 	Username string `json:"username"`
+	State    string `json:"state"`
 }
 
 type Member struct {

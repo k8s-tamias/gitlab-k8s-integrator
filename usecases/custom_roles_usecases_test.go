@@ -14,7 +14,7 @@ metadata:
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: mars-group-sim-runner
@@ -28,7 +28,7 @@ subjects:
     namespace: abb256
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: mars-sim-runner-role
@@ -77,7 +77,7 @@ rules:
 
 ---
 # Allow the mars group serviceAccount to use the priviliged PSP
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: mars-group-serviceaccount-psp
@@ -93,7 +93,7 @@ subjects:
 ---
 
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: daemon-set-allowance-role
 rules:
@@ -113,7 +113,7 @@ rules:
 ---
 # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: abb256-daemon-set-allowance
   namespace: abb256
@@ -174,7 +174,7 @@ metadata:
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
  name: mars-group-sim-runner

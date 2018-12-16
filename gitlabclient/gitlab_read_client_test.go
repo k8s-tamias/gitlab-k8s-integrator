@@ -608,8 +608,8 @@ func TestGetAllProjects(t *testing.T) {
       "default_branch": "master",
       "tag_list": [],
       "ssh_url_to_repo": "git@gitlab.informatik.haw-hamburg.de:icc/kubectl.git",
-      "http_url_to_repo": "https://gitlab.informatik.haw-hamburg.de/icc/kubectl.git",
-      "web_url": "https://gitlab.informatik.haw-hamburg.de/icc/kubectl",
+      "http_url_to_repo": "https://gitlab.figo.systems/platform/kubectl.git",
+      "web_url": "https://gitlab.figo.systems/platform/kubectl",
       "name": "kubectl",
       "name_with_namespace": "icc / kubectl",
       "path": "kubectl",
@@ -640,8 +640,8 @@ func TestGetAllProjects(t *testing.T) {
     "default_branch": "master",
     "tag_list": [],
     "ssh_url_to_repo": "git@gitlab.informatik.haw-hamburg.de:icc/kubectl.git",
-    "http_url_to_repo": "https://gitlab.informatik.haw-hamburg.de/icc/kubectl.git",
-    "web_url": "https://gitlab.informatik.haw-hamburg.de/icc/kubectl",
+    "http_url_to_repo": "https://gitlab.figo.systems/platform/kubectl.git",
+    "web_url": "https://gitlab.figo.systems/platform/kubectl",
     "name": "kubectl",
     "name_with_namespace": "icc / kubectl",
     "path": "kubectl",
@@ -2493,5 +2493,9 @@ func TestGetAllUsers(t *testing.T) {
 	}
 	if len(foundUsers) != 20 {
 		t.Error("No users were parsed.")
+	}
+
+	if foundUsers[0].Username == "" {
+		t.Error("deserialization didnt work for Users. Username was empty!")
 	}
 }

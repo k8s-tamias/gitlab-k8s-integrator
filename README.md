@@ -224,15 +224,6 @@ spec:
           value: "kubernetes"
         - name: EXTERNAL_K8S_API_URL
           value: "https://awesome.external.k8s.example.com"
-        - name: GRAYLOG_BASE_URL
-          value: "http://graylog.logging.svc.cluster.local:9000"
-        - name: GRAYLOG_ADMIN_USER
-          value: "admin"
-        - name: GRAYLOG_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: graylog-admin-password-secret
-              key: pw
         - name: K8S_CA_PEM
           valueFrom:
             configMapKeyRef:
@@ -297,13 +288,17 @@ ENV 'CEPH_USER_KEY' is set. (see below)
 |CEPH_USER_KEY| no (default: gitlab-serviceaccount) | The key of the ceph-secret-user secret. The secret only gets created if this variable is set.
 |K8S_API_URL| yes | The URL where the K8s API server is reachable from the gl-k8s-integrator. In-Cluster would be "kubernetes" on a typical setup 
 |EXTERNAL_K8S_API_URL | no | If set, will be written to the kubernetes service integration for any project
+|GITLAB_ENVIRONMENT_NAME | no | If set, results in creation of environment in gitlab-group-guest
 |ENABLE_SYNC_ENDPOINT| no|If set to 'true' this will enable a /sync endpoint, which may be triggered with a PUSH REST call to start a sync run. (USE WITH CAUTION, may be abused!)
 |ENABLE_GITLAB_HOOKS_DEBUG| no| If set to 'true' the raw hooks messages get printed to stdout upon receiving, Default: no
 |ENABLE_GITLAB_SYNC_DEBUG| no| If set to 'true' the sync process will output debug info
-|GRAYLOG_BASE_URL | no | If set will enable the Graylog Integration
-|GRAYLOG_ADMIN_USER | yes, if above is set | Admin user to use for Graylog integration API calls
-|GRAYLOG_ADMIN_PASSWORD| yes, if above is set |Admin user's password
-|GPU_PSP_CLUSTER_ROLE_NAME| no| If set, will enable creation of a gpu-serviceaccount and a corresponding RoleBinding, which allows to use the PodSecurityPolicy by the name set for the variable.
+|NET_ADMIN_PSP_CLUSTER_ROLE_NAME| no| If set, will enable creation of a net-admin-serviceaccount and a corresponding RoleBinding, which allows to use the PodSecurityPolicy by the name set for the variable.
+|ENABLE_LIMITRANGES| no | Default: false. If set to true, the GitlabIntegrator will write LimitRange objects to each namespace
+|DEFAULT_CPU_REQ|no| Default: 20m. The default CPU request setting for each namespace. Format is "m" for millicores
+|DEFAULT_CPU_LIM|no| Default: 150m. The default CPU limit setting for each namespace. Format is "m" for millicores
+|DEFAULT_MEM_REQ|no| Default: 25Mi. The default Memory request setting for each namespace. Format is "Mi" for value*2^20 (BinarySI)
+|DEFAULT_MEM_LIM|no| Default: 120Mi. The default Memory limit setting for each namespace. Format is "Mi" for value*2^20 (BinarySI)
+
 
 ### Roles and Permissions
 

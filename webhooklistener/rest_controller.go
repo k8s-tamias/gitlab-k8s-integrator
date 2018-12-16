@@ -17,11 +17,13 @@ package webhooklistener
 
 import (
 	"encoding/json"
-	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/usecases"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/k8s-tamias/gitlab-k8s-integrator/usecases"
 )
 
 func Listen(quit chan int) {
@@ -53,11 +55,13 @@ func handleGitlabWebhook(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		if r.Header.Get("X-Gitlab-Event") != "System Hook" {
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Printf("Received bad request from Gitlab. Problem was: X-Gitlab-Event Header was set to %s", r.Header.Get("X-Gitlab-Event"))
 			return
 		}
 		// if GITLAB_SECRET_TOKEN env is set and is unequal to provided token, deny request
 		if getGitlabSecretToken() != "" && r.Header.Get("X-Gitlab-Token") != getGitlabSecretToken() {
 			w.WriteHeader(http.StatusBadRequest)
+			fmt.Printf("Received bad request from Gitlab. Problem was: X-Gitlab-Token (%s) didn't match stored secret token %s", r.Header.Get("X-Gitlab-Token"), getGitlabSecretToken())
 			return
 		}
 

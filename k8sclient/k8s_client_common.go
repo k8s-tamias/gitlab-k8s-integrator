@@ -2,14 +2,15 @@ package k8sclient
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"log"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // Utils
@@ -65,7 +66,7 @@ func GetActualNameSpaceNameByGitlabName(gitlabOriginName string) string {
 /// GetRoleBindingsByNamespace retrieves the rolebindings present in K8s for the provided namespace
 /// the namespace parameter is assumed to be the real namespace name in k8s!
 func GetRoleBindingsByNamespace(namespace string) map[string]bool {
-	rbs, err := getK8sClient().RbacV1beta1().RoleBindings(namespace).List(metav1.ListOptions{})
+	rbs, err := getK8sClient().RbacV1().RoleBindings(namespace).List(metav1.ListOptions{})
 	if check(err) {
 		log.Fatal(fmt.Sprintf("Error while retrieving rolebindings for namespace %s. Error: %s", namespace, err))
 	}
@@ -85,7 +86,7 @@ func ConstructRoleBindingName(username, rolename, ns string) string {
 func GetProjectRoleName(accessLevel string) string {
 	var rname string
 	switch accessLevel {
-	case "Master","Owner":
+	case "Master", "Owner":
 		rname = os.Getenv("PROJECT_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-project-master"
@@ -113,7 +114,7 @@ func GetProjectRoleName(accessLevel string) string {
 func GetGroupRoleName(accessLevel string) string {
 	var rname string
 	switch accessLevel {
-	case "Master","Owner":
+	case "Master", "Owner":
 		rname = os.Getenv("GROUP_MASTER_ROLENAME")
 		if rname == "" {
 			rname = "gitlab-group-master"
@@ -154,7 +155,7 @@ func GitlabNameToK8sNamespace(givenName string) (string, error) {
 
 	nsName = replacer.Replace(nsName)
 	// regex for checking k8s namespace name
-	regex, err := regexp.Compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?")
+	regex, err := regexp.Compile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 	if check(err) {
 		return "", err
@@ -180,14 +181,15 @@ func GitlabNameToK8sLabel(givenName string) (string, error) {
 
 	labelName := replacer.Replace(givenName)
 	// regex for checking k8s namespace name
-	regex, err := regexp.Compile("(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
+	// old expression:           "(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?"
+	regex, err := regexp.Compile("(^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$)")
 
 	if check(err) {
 		return "", err
 	}
 
 	if !regex.MatchString(labelName) {
-		return "", errors.New("Created Namespace name did not adhere to rules")
+		return "", errors.New("Created Label name did not adhere to rules")
 	}
 
 	return labelName, nil

@@ -17,13 +17,14 @@ package gitlabclient
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/peterhellberg/link"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/peterhellberg/link"
+	"github.com/pkg/errors"
 )
 
 func GetFullGitlabContent() (*GitlabContent, error) {
@@ -154,6 +155,14 @@ func GetAllUsers(gitlabUsers []GitlabUser, url string) ([]GitlabUser, error) {
 	return gitlabUsers, nil
 }
 
+/*
+From: https://docs.gitlab.com/ee/api/members.html
+10 => Guest access
+20 => Reporter access
+30 => Developer access
+40 => Maintainer access
+50 => Owner access # Only valid for groups
+*/
 func TranslateIntAccessLevels(lvl int) string {
 	level := "default"
 	switch lvl {

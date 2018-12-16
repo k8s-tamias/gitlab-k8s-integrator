@@ -37,8 +37,8 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 
 	req.URL.RawQuery = q.Encode()
 
-	req.Header.Add("PRIVATE-TOKEN", os.Getenv("GITLAB_PRIVATE_TOKEN"))
-	req.Header.Add("SUDO", "root")
+	req.Header.Add("Private-Token", os.Getenv("GITLAB_PRIVATE_TOKEN"))
+	req.Header.Add("Sudo", "root")
 
 	resp, err := http.DefaultClient.Do(req)
 
@@ -47,7 +47,13 @@ func SetupK8sIntegrationForGitlabProject(projectId, namespace, token string) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s failed with errorCode %d", projectId, resp.StatusCode))
+		msg := ""
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			msg = string(body[:])
+
+		}
+		log.Println(fmt.Sprintf("Setting up Kubernetes Integration for project %s failed with errorCode %d and message %s", projectId, resp.StatusCode, msg))
 	}
 
 	setupEnvironment(projectId)
@@ -63,7 +69,13 @@ type Msg struct {
 }
 
 func setupEnvironment(projectId string) {
-	envName := "icc-dev"
+	envName := os.Getenv("GITLAB_ENVIRONMENT_NAME")
+	if envName == "" {
+		// abort if GITLAB_ENVIRONMENT_NAME was not set
+		log.Println("GITLAB_ENVIRONMENT_NAME was not set, skipping creation of environment in Gitlab...")
+		return
+	}
+
 	url := fmt.Sprintf("%sprojects/%s/environments", getGitlabBaseUrl(), projectId)
 	values := map[string]string{"id": projectId, "name": envName}
 	jsonValue, err := json.Marshal(values)

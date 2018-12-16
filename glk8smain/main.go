@@ -17,12 +17,13 @@ package glk8smain
 
 import (
 	"fmt"
-	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/usecases"
-	"gitlab.informatik.haw-hamburg.de/icc/gl-k8s-integrator/webhooklistener"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/k8s-tamias/gitlab-k8s-integrator/usecases"
+	"github.com/k8s-tamias/gitlab-k8s-integrator/webhooklistener"
 )
 
 func Main() {

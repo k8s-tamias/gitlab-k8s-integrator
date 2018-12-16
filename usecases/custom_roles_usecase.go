@@ -3,19 +3,20 @@ package usecases
 import (
 	"io/ioutil"
 	//_ "k8s.io/api"
-	_ "k8s.io/api/extensions/v1beta1"
+	//_ "k8s.io/api/extensions/v1"
 	//_ "k8s.io/client-go/pkg/apis/rbac/install"
 	"fmt"
+	"log"
+	"os"
+	"regexp"
+	"strings"
+
 	"k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"log"
-	"os"
-	"regexp"
-	"strings"
 )
 
 type CustomRolesAndBindings struct {
@@ -70,24 +71,44 @@ func ReadAndApplyCustomRolesAndBindings() CustomRolesAndBindings {
 
 				case *rbacv1.Role:
 					res.Roles[o.Name] = true
-					k8sclient.RbacV1().Roles(o.Namespace).Create(o)
-					log.Printf("Applied Custom Role %s in Namespace %s", o.Name, o.Namespace)
+					_, err := k8sclient.RbacV1().Roles(o.Namespace).Create(o)
+					if err != nil {
+						log.Printf("Error applying Custome Role %s in Namespace %s. Err: %s", o.Name, o.Namespace, err)
+					} else {
+						log.Printf("Applied Custom Role %s in Namespace %s", o.Name, o.Namespace)
+					}
 				case *rbacv1.RoleBinding:
 					res.RoleBindings[o.Name] = true
-					k8sclient.RbacV1().RoleBindings(o.Namespace).Create(o)
-					log.Printf("Applied Custom RoleBinding %s in Namespace %s", o.Name, o.Namespace)
+					_, err := k8sclient.RbacV1().RoleBindings(o.Namespace).Create(o)
+					if err != nil {
+						log.Printf("Error applying Custome RoleBinding %s in Namespace %s. Err: %s", o.Name, o.Namespace, err)
+					} else {
+						log.Printf("Applied Custom RoleBinding %s in Namespace %s", o.Name, o.Namespace)
+					}
 				case *rbacv1.ClusterRole:
 					res.ClusterRoles[o.Name] = true
-					k8sclient.RbacV1().ClusterRoles().Create(o)
-					log.Printf("Applied Custom ClusterRole %s", o.Name)
+					_, err := k8sclient.RbacV1().ClusterRoles().Create(o)
+					if err != nil {
+						log.Printf("Error applying Custome ClusterRole %s in Namespace %s. Err: %s", o.Name, o.Namespace, err)
+					} else {
+						log.Printf("Applied Custom ClusterRole %s", o.Name)
+					}
 				case *rbacv1.ClusterRoleBinding:
 					res.ClusterRoleBindings[o.Name] = true
-					k8sclient.RbacV1().ClusterRoleBindings().Create(o)
-					log.Printf("Applied Custom ClusterRoleBinding %s", o.Name)
+					_, err := k8sclient.RbacV1().ClusterRoleBindings().Create(o)
+					if err != nil {
+						log.Printf("Error applying Custome ClusterRoleBinding %s in Namespace %s. Err: %s", o.Name, o.Namespace, err)
+					} else {
+						log.Printf("Applied Custom ClusterRoleBinding %s", o.Name)
+					}
 				case *v1.ServiceAccount:
 					res.ServiceAccounts[o.Name] = true
-					k8sclient.CoreV1().ServiceAccounts(o.Namespace).Create(o)
-					log.Printf("Applied Custom ServiceAccount %s in Namespace %s", o.Name, o.Namespace)
+					_, err := k8sclient.CoreV1().ServiceAccounts(o.Namespace).Create(o)
+					if err != nil {
+						log.Printf("Error applying Custome ServiceAccount %s in Namespace %s. Err: %s", o.Name, o.Namespace, err)
+					} else {
+						log.Printf("Applied Custom ServiceAccount %s in Namespace %s", o.Name, o.Namespace)
+					}
 				}
 			}
 		}
